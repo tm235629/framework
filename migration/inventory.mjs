@@ -20,7 +20,7 @@
  * ── CRITICAL SAFETY: READ-ONLY ON THE LIVE DRIVE ────────────────────────────
  * This script READS the Drive and writes EXACTLY ONE artifact: the inventory
  * JSON. By default — and in every mode reachable in this task — that artifact is
- * pinned UNDER __Framework/migration/_validation/ (a NON-live, framework-owned
+ * pinned UNDER migration/_validation/ (a NON-live, framework-owned
  * tree) via assertSafeOut(). It NEVER moves, renames, deletes, or overwrites any
  * Drive content file. SHA-1 is read-only (open 'rb', stream, hash). The ONLY
  * fs.writeFileSync target is the inventory JSON, guarded so it cannot escape the
@@ -28,12 +28,12 @@
  * (which the PLAYBOOK reserves for a real, gated migration on a NON-MOT Drive).
  *
  * Usage (validation — the only mode run in this task):
- *   node __Framework/migration/inventory.mjs [manifestPath] [options]
+ *   node migration/inventory.mjs [manifestPath] [options]
  *     --out FILE     inventory path (default _validation/inventory.sample.json)
  *     --limit N      cap files hashed (sample mode; 0 = all). Default 0.
  *     --no-hash      skip sha1 (size+name dedup only) — faster smoke test
  *     --json         print the summary block to stdout as JSON
- *   default manifestPath = __Framework/tooling/manifest.json (pass manifest.mot.json explicitly for the reference instance)
+ *   default manifestPath = tooling/manifest.json (pass manifest.mot.json explicitly for the reference instance)
  */
 
 import fs from 'fs';

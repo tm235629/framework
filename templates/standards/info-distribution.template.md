@@ -1,13 +1,13 @@
 ---
 description: Generalized information-distribution contract — the three-view data model (per-entity overviews · periodic-snapshot sync · longitudinal timelines) and the engagement-tracking rule. Mechanism only; cadence, verticals, and staff are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.cadence, vocab.verticals, entity_registry.
-  - path: __Framework/templates/standards/output-schema.template.md
+  - path: templates/standards/output-schema.template.md
     type: related
     note: View 2 (the periodic sync) — this contract gives its high-level structure; output-schema gives its full content schema + QA gate.
-  - path: __Framework/templates/standards/quality.template.md
+  - path: templates/standards/quality.template.md
     type: related
     note: View 1 (per-entity overviews) — this contract names them; quality gives their content/freshness contract.
 status: current

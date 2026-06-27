@@ -1,12 +1,9 @@
 ---
 description: Design spec for the drift-detection actuator — a dry-run-first fixer that consumes drift.json and reconciles drift by autonomy tier, completing the sensor→actuator control loop.
 references:
-  - path: __Framework/slices/drift-detection/DESIGN.md
+  - path: slices/drift-detection/DESIGN.md
     type: sibling
     note: The sensor half; this actuator consumes its drift.json output.
-  - path: __Operations/Dashboard/scripts/mot-tools.js
-    type: related
-    note: The read-only sensor (audit). The actuator's mutating logic deliberately lives elsewhere to keep this read-only.
 status: draft
 context: framework-architecture
 tags: [framework-meta]

@@ -35,16 +35,16 @@
  *                  supply_chain_role,description} ] }
  *
  * Usage:
- *   node __Framework/tooling/kb-entities.mjs            # build → entities.json, print summary
- *   node __Framework/tooling/kb-entities.mjs --check    # validate only, write nothing
- *   node __Framework/tooling/kb-entities.mjs --out -    # print registry JSON to stdout
+ *   node tooling/kb-entities.mjs            # build → entities.json, print summary
+ *   node tooling/kb-entities.mjs --check    # validate only, write nothing
+ *   node tooling/kb-entities.mjs --out -    # print registry JSON to stdout
  *   [manifestPath] [--graph PATH] [--out PATH]
  *     default manifestPath = manifest.example.json (shipped demo; copy to manifest.json and edit for your Drive)
- *     default --graph      = __Framework/tooling/_validation/graph-index.kb.json (kb-index output; pass the live graph-index.json explicitly)
- *     default --out        = __Framework/tooling/_validation/entities.kb.json
+ *     default --graph      = tooling/_validation/graph-index.kb.json (kb-index output; pass the live graph-index.json explicitly)
+ *     default --out        = tooling/_validation/entities.kb.json
  *
  * ADDITIVE & read-only on the live tree: by default the ONLY file this writes is the
- * derived registry under __Framework/tooling/_validation/entities.kb.json. To publish
+ * derived registry under tooling/_validation/entities.kb.json. To publish
  * into a live dashboard data dir (where it sits beside projects.json / sync.json and is
  * auto-served at /api/data/entities.json), pass --out explicitly. It modifies NOTHING else.
  */

@@ -1,15 +1,12 @@
 ---
 description: Generalized nested per-folder rule-file body template — Purpose / dated current-position / disambiguation-or-guardrails / navigation-to-summary / folder-map / child-index / lifecycle footer. The section skeleton is mechanism; every value is a {company-slot} drawn from the manifest's context_registry + the folder's own contents. No company values.
 references:
-  - path: __Framework/templates/instruction/root-AGENT.template.md
+  - path: templates/instruction/root-AGENT.template.md
     type: related
     note: The root hub whose "Focused folder work" / "Targeted edit" rows route the agent into a file built from this template.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots bind to context_registry (disambiguation), frontmatter_schema (TL;DR + avoid-read), and vocab (status enum, edge types).
-  - path: __Projects/Aquisition/20250627 Bosch/CLAUDE.md
-    type: describes
-    note: A worked MOT instance this template was generalized from (entity-level rule file with a disambiguation guardrail).
 status: current
 context: framework-architecture
 tags: [framework-meta]

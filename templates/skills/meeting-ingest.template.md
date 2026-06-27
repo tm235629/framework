@@ -1,10 +1,10 @@
 ---
 description: The meeting-ingest skill skeleton — the generalized form of MOT's video-process. Turns raw transcripts + frames into a speaker-ID'd, QA'd meeting summary, then feeds entity overviews and the roll-up. Sub-skill of the periodic-sync orchestrator. Parameterized by the transcription adapter and the people registry; every company value is a {company-slot} naming its manifest field. The web-clip cutter is out of the core.
 references:
-  - path: __Framework/templates/skills/periodic-sync.template.md
+  - path: templates/skills/periodic-sync.template.md
     type: trigger
     note: The orchestrator's Step 5 hands off to this sub-skill when the transcription adapter yields new recordings.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The transcription backend, media tool, recordings + summary locations, and the speaker-ID people seed all come from this manifest schema (input_adapters.transcription, entity_registry.people).
 status: current

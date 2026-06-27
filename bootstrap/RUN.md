@@ -1,16 +1,16 @@
 ---
 description: The one-page copy-pasteable LAUNCHER for the __Framework — stand up a focus-adapted instance of the knowledge-OS on a new Drive (MetaOptics is the reference instance the framework was extracted from). Path-picker + concrete stand-up steps + the exact agent prompt + the human gates to expect. Start here.
 references:
-  - path: __Framework/bootstrap/teammate.md
+  - path: bootstrap/teammate.md
     type: long-form
     note: The full same-company runbook this launcher front-ends — the default path; RUN.md is its TL;DR + copy-paste entry point.
-  - path: __Framework/tooling/company-seed.json
+  - path: tooling/company-seed.example.json
     type: source
-    note: The shared { manifest_version, company_profile } a teammate copies verbatim into their manifest.json (Step 3 here).
-  - path: __Framework/tooling/TOOLS.md
+    note: The shipped synthetic shared seed ({ manifest_version, company_profile }); a teammate copies their company's filled seed verbatim into manifest.json (Step 3 here).
+  - path: tooling/TOOLS.md
     type: related
     note: Per-tool operator reference for the kb-* B-library the stand-up steps invoke (kb-index/kb-focus/kb-audit).
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: builds-on
     note: The full phased pipeline behind the path-picker; greenfield/brownfield/new-company branch from its top-level bifurcation.
 status: current
@@ -42,11 +42,11 @@ node_kind: topic
 
 Run on the **target** person's machine. `<DRIVE>` = their Drive root (e.g. `C:/Users/<them>/OneDrive - <Your Company>`). Forward slashes throughout.
 
-**A. Get the framework onto the target machine.** Copy (or `git clone`) the whole `__Framework/` folder to the target — either standalone, or as a `__Framework/` folder inside their Drive. If it lives inside their Drive, it is already excluded from their graph (the manifest's `excludes.dirs` lists `__Framework`), so it never pollutes their index.
+**A. Get the framework onto the target machine.** Copy (or `git clone`) the whole framework repo to the target — either standalone, or as a `__Framework/framework/` folder inside their Drive. If it lives inside their Drive, it is already excluded from their graph (the manifest's `excludes.dirs` lists `__Framework`), so it never pollutes their index.
 
 **B. Install the tools** (zero MOT coupling — tooling carries its own `package.json`):
 ```bash
-cd __Framework/tooling && npm install
+cd tooling && npm install
 ```
 
 **C. Create their `manifest.json`** — copy the shared seed's `company_profile` **verbatim**, then add a `person_profile`:
@@ -85,7 +85,7 @@ Instance is up when `kb-index` builds without error and `kb-audit` shows **0 hig
 Hand the target agent exactly this (fill the three angle-bracket slots):
 
 ```
-Read __Framework/CLAUDE.md, then follow bootstrap/teammate.md to stand up my instance.
+Read CLAUDE.md, then follow bootstrap/teammate.md to stand up my instance.
 My Drive root is <PATH>. I am <NAME> (<ROLE>). Stop at each human gate.
 ```
 

@@ -1,16 +1,16 @@
 ---
-description: Operator runbook for standing up a knowledge-OS on a NEAR-EMPTY (greenfield) Drive — a concrete step-by-step checklist mapping SETUP_SEQUENCE phases to the artifact to create, the tool/command to run, and the gate (if any). Greenfield skips Phase 4 (no migration: content arrives correctly placed) and exploits its one advantage — design-first with zero legacy debt.
+description: Operator runbook for standing up a knowledge-OS on a NEAR-EMPTY (greenfield) Drive — a concrete step-by-step checklist mapping SETUP_SEQUENCE phases to the artifact to create, the tool/command to run, and the gate (if any). Greenfield skips Phase 4 (no migration; content arrives correctly placed) and exploits its one advantage — design-first with zero legacy debt.
 references:
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: builds-on
     note: The phased pipeline + bifurcations this runbook operationalizes for the GREENFIELD branch (skip Phase 4). SETUP_SEQUENCE owns the edge up to ARCHITECTURE.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema every artifact below fills; the validate step checks against it.
-  - path: __Framework/templates/README.md
+  - path: templates/README.md
     type: related
     note: The mechanism library each step copies a template from; {company-slot} markers resolve from the manifest.
-  - path: __Framework/migration/README.md
+  - path: migration/README.md
     type: related
     note: The Phase 4 migration kit this runbook deliberately SKIPS — named so an operator confirms it is not needed on a greenfield Drive.
 status: current
@@ -42,8 +42,8 @@ record them — they pick which adapter ships first and which guards turn on:
 `storage` (synced-cloud → `storage_profile.churn_guards`+`lock_guards` ON / local-git → OFF).
 
 All commands run from the Drive root with Node ≥ 18. `MANIFEST=path/to/manifest.json` below is the
-instance manifest you build in Phase 1–2 (schema: `__Framework/tooling/config.schema.json`; the worked
-reference is `__Framework/tooling/manifest.mot.json`).
+instance manifest you build in Phase 1–2 (schema: `tooling/config.schema.json`; the worked
+reference is `tooling/manifest.mot.json`).
 
 ---
 
@@ -67,10 +67,10 @@ Bosch/STMicro confusion).
 
 | # | Artifact (template) | Where it goes | Tool / command |
 |---|---|---|---|
-| 1.1 | **company_profile** of the manifest — taxonomy (`project_tiers`, `category_rules`, `subfolder_convention`, `non_card_subfolders`), `vocab` (tier_scale, phase_enum, verticals, edge_types, node_kinds, status_enum), `excludes`, `catalog_profile`, `brand`, `cadence`, `storage_profile`. Author from the Standards templates — fill the values, don't restate the rule shapes. | `manifest.json` → `company_profile` | hand-author against `__Framework/tooling/config.schema.json`; copy structure from `__Framework/tooling/manifest.mot.json` |
-| 1.2 | **entity registry** (people→roles seed; companies derivable from folder names) | `manifest.json` → `company_profile.entity_registry` | fill `__Framework/templates/registries/entity-registry.template.json`, drop the `_examples` key, paste in |
-| 1.3 | **context registry** (every confusable workstream: tag + owner + reciprocal `difference` note on each sibling) | `manifest.json` → `company_profile.context_registry` | fill `__Framework/templates/registries/context-registry.template.json`, drop `x-examples`, paste in |
-| 1.4 | **person_profile** — for a teammate instance, copy `company_profile` verbatim as the shared seed, then run the focus-detector to fill `person_profile.focus`; for a new company, fill the identity block by hand | `manifest.json` → `person_profile` | `node __Framework/tooling/kb-focus.mjs manifest.json graph-index.json` (teammate only; the manifest-driven detector — reads what dominates the person's Drive) |
+| 1.1 | **company_profile** of the manifest — taxonomy (`project_tiers`, `category_rules`, `subfolder_convention`, `non_card_subfolders`), `vocab` (tier_scale, phase_enum, verticals, edge_types, node_kinds, status_enum), `excludes`, `catalog_profile`, `brand`, `cadence`, `storage_profile`. Author from the Standards templates — fill the values, don't restate the rule shapes. | `manifest.json` → `company_profile` | hand-author against `tooling/config.schema.json`; copy structure from `tooling/manifest.mot.json` |
+| 1.2 | **entity registry** (people→roles seed; companies derivable from folder names) | `manifest.json` → `company_profile.entity_registry` | fill `templates/registries/entity-registry.template.json`, drop the `_examples` key, paste in |
+| 1.3 | **context registry** (every confusable workstream: tag + owner + reciprocal `difference` note on each sibling) | `manifest.json` → `company_profile.context_registry` | fill `templates/registries/context-registry.template.json`, drop `x-examples`, paste in |
+| 1.4 | **person_profile** — for a teammate instance, copy `company_profile` verbatim as the shared seed, then run the focus-detector to fill `person_profile.focus`; for a new company, fill the identity block by hand | `manifest.json` → `person_profile` | `node tooling/kb-focus.mjs manifest.json graph-index.json` (teammate only; the manifest-driven detector — reads what dominates the person's Drive) |
 
 - **GATE (A — the single most important gate):** **approve the proposed taxonomy + both registries.**
   Everything downstream is built on this. Greenfield has no legacy content to validate the taxonomy
@@ -89,9 +89,9 @@ Lock the frontmatter node/edge schema + the freshness axis so the B-tools have a
 
 | # | Artifact (template) | Tool / command |
 |---|---|---|
-| 2.1 | **frontmatter_schema** in the manifest — `required_fields` (`description`, `references`), `optional_fields` (tier/phase/vertical/node_kind/supply_chain_role/status/context/valid_as_of/agent_read…), `tldr_keys.canonical` + `date_anchored_key`, `avoid_read_marker` | fill `manifest.json` → `company_profile.frontmatter_schema`, guided by `__Framework/templates/data-model/frontmatter-fields.template.md` (the field-by-field table) + `data-model.template.md` |
-| 2.2 | **graph-wiring + lifecycle + quality Standards** — the written contracts the schema enforces (typed `references[]` vocab, define-once, containment-free; status/freshness; TL;DR-card) | copy `__Framework/templates/standards/{graph-wiring,lifecycle,quality}.template.md` into the instance governance folder; resolve every `{company-slot}` from the manifest |
-| 2.3 | **validate the manifest** against the schema | validate `manifest.json` against `__Framework/tooling/config.schema.json` (any JSON-Schema 2020-12 validator) — **must pass before Phase 3** |
+| 2.1 | **frontmatter_schema** in the manifest — `required_fields` (`description`, `references`), `optional_fields` (tier/phase/vertical/node_kind/supply_chain_role/status/context/valid_as_of/agent_read…), `tldr_keys.canonical` + `date_anchored_key`, `avoid_read_marker` | fill `manifest.json` → `company_profile.frontmatter_schema`, guided by `templates/data-model/frontmatter-fields.template.md` (the field-by-field table) + `data-model.template.md` |
+| 2.2 | **graph-wiring + lifecycle + quality Standards** — the written contracts the schema enforces (typed `references[]` vocab, define-once, containment-free; status/freshness; TL;DR-card) | copy `templates/standards/{graph-wiring,lifecycle,quality}.template.md` into the instance governance folder; resolve every `{company-slot}` from the manifest |
+| 2.3 | **validate the manifest** against the schema | validate `manifest.json` against `tooling/config.schema.json` (any JSON-Schema 2020-12 validator) — **must pass before Phase 3** |
 
 - **Gate:** none if templates are filled mechanically from the manifest. Escalate to **A** only for a
   *genuinely novel* schema choice (a new axis the eight Standards templates don't cover).
@@ -106,11 +106,11 @@ regenerates from day one. Each tool is a **pure function of the manifest** — w
 
 | # | B-tool | Command (greenfield: runs clean against the empty tree) | Produces |
 |---|---|---|---|
-| 3.1 | **kb-index** — frontmatter graph indexer | `node __Framework/tooling/kb-index.mjs "$MANIFEST" --out graph-index.json` | `graph-index.json` (nodes + containment + references + counts) |
-| 3.2 | **kb-walk** — per-folder `_catalog.md` generator (generalized `mot-walker`) | `node __Framework/tooling/kb-walk.mjs "$MANIFEST"` | catalogs (validation-mode here; writes live catalogs once content lands via the sync skill) |
-| 3.3 | **kb-extract** — TL;DR entity-card extractor | `node __Framework/tooling/kb-extract.mjs "$MANIFEST" --out data/projects.json` | `projects.json` (empty until Overviews exist — expected) |
-| 3.4 | **kb-entities** — entity-registry generator (people SOT + folder-derived companies) | `node __Framework/tooling/kb-entities.mjs "$MANIFEST" --graph graph-index.json` | `entities.json` (people from the seed; companies fill in as folders appear) |
-| 3.5 | **kb-audit** — drift auditor / ref validator | `node __Framework/tooling/kb-audit.mjs "$MANIFEST" --out data/drift.json --json` | `drift.json` — **must be clean** on the empty Drive |
+| 3.1 | **kb-index** — frontmatter graph indexer | `node tooling/kb-index.mjs "$MANIFEST" --out graph-index.json` | `graph-index.json` (nodes + containment + references + counts) |
+| 3.2 | **kb-walk** — per-folder `_catalog.md` generator (generalized `mot-walker`) | `node tooling/kb-walk.mjs "$MANIFEST"` | catalogs (validation-mode here; writes live catalogs once content lands via the sync skill) |
+| 3.3 | **kb-extract** — TL;DR entity-card extractor | `node tooling/kb-extract.mjs "$MANIFEST" --out data/projects.json` | `projects.json` (empty until Overviews exist — expected) |
+| 3.4 | **kb-entities** — entity-registry generator (people SOT + folder-derived companies) | `node tooling/kb-entities.mjs "$MANIFEST" --graph graph-index.json` | `entities.json` (people from the seed; companies fill in as folders appear) |
+| 3.5 | **kb-audit** — drift auditor / ref validator | `node tooling/kb-audit.mjs "$MANIFEST" --out data/drift.json --json` | `drift.json` — **must be clean** on the empty Drive |
 
 - **Gate:** none.
 - **Greenfield advantage made concrete:** the validator + indexer + walker exist **before** the first
@@ -124,7 +124,7 @@ regenerates from day one. Each tool is a **pure function of the manifest** — w
 ## Phase 4 — Content migration *(SKIPPED — greenfield has no legacy content)*
 
 - **Do nothing.** There is no messy tree to migrate, no `rename_map.json`, no `_superseded/` parking, no
-  two-gate move procedure. The migration kit (`__Framework/migration/`) is the brownfield tool and is not
+  two-gate move procedure. The migration kit (`migration/`) is the brownfield tool and is not
   invoked here.
 - **Instead, content enters correctly placed** through the Phase 6 skills: the ingest adapter + the
   periodic-sync orchestrator port every new file to its `{placement-rules}` destination with frontmatter
@@ -140,9 +140,9 @@ Write the static root agent file + nested per-folder rule files now that the str
 
 | # | Artifact (template) | Tool / command | Gate |
 |---|---|---|---|
-| 5.1 | **root `AGENT.md`** — classify-before-reading routing table + three autonomy tiers + avoid-read + superseded/legacy conventions; index/people/CLI/triggers are `{company-slot}` | render `__Framework/templates/instruction/root-AGENT.template.md`, binding each `{slot}` to its manifest field (project index + people table emitted by kb-extract/kb-entities, not hand-kept) | — |
-| 5.2 | **nested rule file per folder that needs one** — leaf folders get Purpose + Navigation only; an ambiguity-prone / active folder adds the guardrail + dated current-position blocks (disambiguation **generated from `context_registry`**, never from memory) | render `__Framework/templates/instruction/nested-rule-file.template.md` per folder | — |
-| 5.3 | **validate parentage** — every nested file encodes parentage **once** (a frontmatter edge, not a prose "Parent:" line) and registers in the graph | `node __Framework/tooling/kb-index.mjs "$MANIFEST"` then `node __Framework/tooling/kb-audit.mjs "$MANIFEST"` — green | A only if a violation is structural |
+| 5.1 | **root `AGENT.md`** — classify-before-reading routing table + three autonomy tiers + avoid-read + superseded/legacy conventions; index/people/CLI/triggers are `{company-slot}` | render `templates/instruction/root-AGENT.template.md`, binding each `{slot}` to its manifest field (project index + people table emitted by kb-extract/kb-entities, not hand-kept) | — |
+| 5.2 | **nested rule file per folder that needs one** — leaf folders get Purpose + Navigation only; an ambiguity-prone / active folder adds the guardrail + dated current-position blocks (disambiguation **generated from `context_registry`**, never from memory) | render `templates/instruction/nested-rule-file.template.md` per folder | — |
+| 5.3 | **validate parentage** — every nested file encodes parentage **once** (a frontmatter edge, not a prose "Parent:" line) and registers in the graph | `node tooling/kb-index.mjs "$MANIFEST"` then `node tooling/kb-audit.mjs "$MANIFEST"` — green | A only if a violation is structural |
 
 - **Idealization (apply from day one — greenfield can't inherit the scar):** do **not** overload one
   filename across genres. Keep the router, operating-manuals, template how-tos, and status cards as
@@ -158,9 +158,9 @@ Build the periodic-sync orchestrator + its ingest adapter, thin over the Standar
 
 | # | Artifact (template) | Generalizes | Notes |
 |---|---|---|---|
-| 6.1 | **periodic-sync orchestrator** — ingest → per-thread/meeting summaries → port by placement rules → refresh per-entity overviews → two-audience roll-up + QA → to-dos → **regenerate every derived index** | `mot-sync` | `__Framework/templates/skills/periodic-sync.template.md`; ends by re-running kb-walk + kb-index + kb-extract + kb-entities + kb-audit |
-| 6.2 | **ingest adapter (ship first per dominant-input)** — email (flat-export or mail-API), or meeting-ingest (transcript+frames → speaker-ID'd summary). Source paths/URLs/junk-globs come from `input_adapters`, never hardcoded | `email-cleanup` / `video-process` | `__Framework/templates/skills/{ingest-cleanup,meeting-ingest}.template.md`; **bundle the transcription prerequisite as a real skill** — do not leave it an undocumented external seam |
-| 6.3 | **drift-fix actuator** — read-only audit → dry-run → gated tier-1 auto-fix → tier-2/3 decision list → re-audit | `drift-fix` | `__Framework/templates/skills/drift-fix.template.md`; pairs with kb-audit as the Phase 9 sensor/actuator |
+| 6.1 | **periodic-sync orchestrator** — ingest → per-thread/meeting summaries → port by placement rules → refresh per-entity overviews → two-audience roll-up + QA → to-dos → **regenerate every derived index** | `mot-sync` | `templates/skills/periodic-sync.template.md`; ends by re-running kb-walk + kb-index + kb-extract + kb-entities + kb-audit |
+| 6.2 | **ingest adapter (ship first per dominant-input)** — email (flat-export or mail-API), or meeting-ingest (transcript+frames → speaker-ID'd summary). Source paths/URLs/junk-globs come from `input_adapters`, never hardcoded | `email-cleanup` / `video-process` | `templates/skills/{ingest-cleanup,meeting-ingest}.template.md`; **bundle the transcription prerequisite as a real skill** — do not leave it an undocumented external seam |
+| 6.3 | **drift-fix actuator** — read-only audit → dry-run → gated tier-1 auto-fix → tier-2/3 decision list → re-audit | `drift-fix` | `templates/skills/drift-fix.template.md`; pairs with kb-audit as the Phase 9 sensor/actuator |
 
 - **Gate:** none for instantiating; the actuators carry their own per-run autonomy tiers (annotate
   autonomous · restructure announce · destroy confirm).
@@ -188,7 +188,7 @@ Build the periodic-sync orchestrator + its ingest adapter, thin over the Standar
 Phases 1–5 run **once**; Phase 6 + 9 run **forever**. The loop reconciles the Drive against its setpoint
 (manifest + Standards) without re-running setup.
 
-- **Sensor (B, cheap, first):** `node __Framework/tooling/kb-audit.mjs "$MANIFEST" --out data/drift.json`
+- **Sensor (B, cheap, first):** `node tooling/kb-audit.mjs "$MANIFEST" --out data/drift.json`
   on a schedule — missing frontmatter, unplaced files, stale `valid_as_of`, dead refs, placement-rule and
   enum violations. Escalate to **C** only for genuinely ambiguous drift (a *new* workstream vs a *renamed*
   existing one — the context-registry check).
@@ -205,13 +205,13 @@ Phases 1–5 run **once**; Phase 6 + 9 run **forever**. The loop reconciles the 
 
 Run from the Drive root with the instance `$MANIFEST`:
 
-- [ ] **Manifest validates** against `__Framework/tooling/config.schema.json` (required:
+- [ ] **Manifest validates** against `tooling/config.schema.json` (required:
       `manifest_version`, `company_profile`, `person_profile`; `additionalProperties:false` — no stray keys).
 - [ ] **Registries seeded:** `company_profile.entity_registry.people` non-empty; every confusable
       workstream has a `context_registry` entry with reciprocal `difference` notes.
-- [ ] **kb-index runs clean:** `node __Framework/tooling/kb-index.mjs "$MANIFEST"` → `graph-index.json`
+- [ ] **kb-index runs clean:** `node tooling/kb-index.mjs "$MANIFEST"` → `graph-index.json`
       builds with **0 errors**.
-- [ ] **kb-audit clean:** `node __Framework/tooling/kb-audit.mjs "$MANIFEST" --json` reports **no
+- [ ] **kb-audit clean:** `node tooling/kb-audit.mjs "$MANIFEST" --json` reports **no
       high-severity findings** (no missing required frontmatter, no invalid reference type, no invalid
       status enum, no dead references, no placement/enum violations).
 - [ ] **kb-entities** resolves the people seed and is ready to pick up folder-derived companies.

@@ -1,18 +1,15 @@
 ---
 description: Operator runbook for standing up the knowledge-OS on a MESSY EXISTING (brownfield) Drive — the hardest SETUP_SEQUENCE path. A concrete phase-by-phase checklist that adds Phase 0 debt audit + the Phase 4 gated reversible migration to the greenfield phases, naming the real B-tools (kb-* + the migration kit) and manifest fields, and calling out the MOT anti-patterns the order exists to avoid.
 references:
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: builds-on
     note: This is the brownfield (Phase 0 audit + Phase 4 migration) instantiation of that phased pipeline; SETUP_SEQUENCE owns the edge from architecture.
-  - path: __Framework/migration/PLAYBOOK.md
+  - path: migration/PLAYBOOK.md
     type: long-form
     note: Phase 4 is the two-gate inventory → rename_map → executed_moves procedure spelled out in full here.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema every phase fills/reads; field names cited in this runbook are its slots.
-  - path: __Framework/instance-zero/MOT_GAP_ANALYSIS.md
-    type: related
-    note: A worked Phase 0 debt audit on a real (Instance-Zero) Drive — the prioritized blocks_replication table this runbook's Phase 0 produces.
 status: current
 context: framework-architecture
 tags: [framework-meta]
@@ -48,7 +45,7 @@ instance, cited as a worked example, never a constraint on the Drive you are sta
 - [ ] **Run the read-only inventory** with the migration kit's Phase-1 tool against a *draft* manifest (root +
       `migration_profile.scan_roots` are enough to walk):
       ```
-      node __Framework/migration/inventory.mjs <draft-manifest.json> --out <dir>/inventory.json
+      node migration/inventory.mjs <draft-manifest.json> --out <dir>/inventory.json
       ```
       For every file it records `{ rel, dir, name, size, sha1, type, type_label, mtime_ms, path_len }`, plus
       the **longest path length** (so a later rename can be shown to *shorten* under the path limit) and a
@@ -196,7 +193,7 @@ shape is*, and *go/no-go on the exact plan*).
       passed via `--metadata`.
 - [ ] *(B)* Propose the exact plan:
       ```
-      node __Framework/migration/plan-renames.mjs <inventory.json> <manifest.json> [--metadata resolved.json] --out rename_map.json
+      node migration/plan-renames.mjs <inventory.json> <manifest.json> [--metadata resolved.json] --out rename_map.json
       ```
       Emits `{ moves[], superseded[], needs_review[], destination_clashes[] }`. It picks the **shortest-path
       copy** as the survivor per exact-dup group, routes the rest to `<superseded-sink>/<old path>`, slots a
@@ -212,12 +209,12 @@ shape is*, and *go/no-go on the exact plan*).
 ### 4.3 — Execute + verify (B; dual interlock)
 - [ ] **Dry-run first (default — writes nothing):**
       ```
-      node __Framework/migration/apply-moves.mjs <rename_map.json> <manifest.json>
+      node migration/apply-moves.mjs <rename_map.json> <manifest.json>
       ```
       Pre-flight verifies every source exists and no destination collides or pre-exists.
 - [ ] **Apply (gate 2 passed; non-MOT Drive only):**
       ```
-      node __Framework/migration/apply-moves.mjs <rename_map.json> <manifest.json> --apply
+      node migration/apply-moves.mjs <rename_map.json> <manifest.json> --apply
       ```
       Moves each op (`mkdir -p` dest · **no-clobber** · cross-volume copy+unlink fallback · EBUSY/EPERM retry
       for synced cloud) and **appends to `executed_moves.json` as each op completes** — so even an interrupted
@@ -238,7 +235,7 @@ shape is*, and *go/no-go on the exact plan*).
 
 ### Rollback — exact reverse replay (if verify fails)
 ```
-node __Framework/migration/apply-moves.mjs --rollback executed_moves.json <manifest.json>
+node migration/apply-moves.mjs --rollback executed_moves.json <manifest.json>
 ```
 Replays the log **new → old in reverse**, restoring the prior tree to the byte (surplus copies in
 `_superseded/` are restored too).

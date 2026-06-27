@@ -1,10 +1,10 @@
 ---
-description: Generalized input-format contract — the inbound-source (email/attachment archive) format spec: filename grammar, file-type inventory, body formats, junk patterns, and duplicate-cleanup status. Mechanism only; the archive location, grammar, junk globs, and extension map are {company-slot}s from the manifest.
+description: Generalized input-format contract — the inbound-source (email/attachment archive) format spec — filename grammar, file-type inventory, body formats, junk patterns, and duplicate-cleanup status. Mechanism only; the archive location, grammar, junk globs, and extension map are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.input_adapters.email (location, filename grammar, body formats, junk patterns) + catalog_profile.ext_classification (file-type inventory).
-  - path: __Framework/templates/standards/output-schema.template.md
+  - path: templates/standards/output-schema.template.md
     type: related
     note: §A of the output schema (forwarded-thread discipline, topmost-message extraction) consumes this input format.
 status: current

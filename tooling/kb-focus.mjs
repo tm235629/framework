@@ -18,7 +18,7 @@
  *   - vocab.{verticals, tier_scale}                         → the controlled axes to rank
  *   - vocab.document_kinds                                  → the doc-genre path patterns
  *   - context_registry[].{tag, owner}                       → the contexts + their owner subtrees
- * It NEVER reads a document body and writes ONLY under __Framework/tooling/_validation/.
+ * It NEVER reads a document body and writes ONLY under tooling/_validation/.
  *
  * ── THE DETECTION MODEL: v1 distribution ensemble (CANONICAL) ─────────────────────────
  * This implements the *validated v1* signal set from slices/focus-detector (focus-detect.mjs
@@ -59,10 +59,10 @@
  *     _flagged_company_central, _signals }
  *
  * Usage:
- *   node __Framework/tooling/kb-focus.mjs [manifest] [graph-index] [--out PATH] [--json]
+ *   node tooling/kb-focus.mjs [manifest] [graph-index] [--out PATH] [--json]
  *     default manifest    = manifest.example.json (shipped demo; copy to manifest.json and edit for your Drive)
- *     default graph-index = __Framework/tooling/_validation/graph-index.kb.json (kb-index output; pass the live graph-index.json explicitly)
- *     default --out       = __Framework/tooling/_validation/person_profile.focus.kb.json
+ *     default graph-index = tooling/_validation/graph-index.kb.json (kb-index output; pass the live graph-index.json explicitly)
+ *     default --out       = tooling/_validation/person_profile.focus.kb.json
  *     --out -             → print the proposed focus JSON to stdout
  *     --json              → print the full result (incl. _signals) to stdout as well
  *

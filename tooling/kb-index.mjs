@@ -11,16 +11,16 @@
  * rule, and lifted field comes from the manifest.
  *
  * Usage:
- *   node __Framework/tooling/kb-index.mjs [manifestPath] [--out PATH]
+ *   node tooling/kb-index.mjs [manifestPath] [--out PATH]
  *   default manifestPath = manifest.example.json (the shipped synthetic demo; copy to manifest.json and edit for your Drive)
- *   default --out        = __Framework/tooling/_validation/graph-index.kb.json
+ *   default --out        = tooling/_validation/graph-index.kb.json
  *
  * Output shape (mirrors mot-tools.js buildGraphIndex):
  *   { generated_at, root, manifest, files:[{id, ...schema fields, category, size, mtime}],
  *     containment:[{child,parent}], references:[{source,target,type}], counts }
  *
  * Frontmatter parsing uses gray-matter, declared in this package's package.json
- * and installed standalone via `npm install` in __Framework/framework/tooling/.
+ * and installed standalone via `npm install` in tooling/.
  * The B-library has no dependency on any sibling instance's node_modules.
  */
 
@@ -33,7 +33,7 @@ const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ── gray-matter resolved from tooling/node_modules (bare import) ──
-// Standalone: `npm install` in __Framework/tooling/ installs gray-matter here,
+// Standalone: `npm install` in tooling/ installs gray-matter here,
 // so the B-library no longer depends on MOT's dashboard install.
 
 // ── Manifest load (the ONLY source of paths/rules/fields) ────────────────

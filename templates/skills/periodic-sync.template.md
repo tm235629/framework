@@ -1,16 +1,16 @@
 ---
 description: The periodic-sync orchestrator skeleton — the generalized form of MOT's mot-sync. Ingest raw inputs → per-thread/meeting summaries → port artifacts by placement rules → refresh per-entity overviews → two-audience roll-up + QA gate → to-dos → regenerate derived indexes (+ drift sweep). Parameterized by an inbox adapter, placement-rule set, sync schema, and cadence; every company value is a {company-slot} naming its manifest field.
 references:
-  - path: __Framework/templates/skills/ingest-cleanup.template.md
+  - path: templates/skills/ingest-cleanup.template.md
     type: trigger
     note: The safe-janitor sub-skill this orchestrator invokes after each ingest pass (Step 1 cleanup, and the after-run cleanup).
-  - path: __Framework/templates/skills/meeting-ingest.template.md
+  - path: templates/skills/meeting-ingest.template.md
     type: trigger
     note: The meeting-ingest sub-skill Step 5 hands off to when the transcription adapter yields recordings.
-  - path: __Framework/templates/skills/drift-fix.template.md
+  - path: templates/skills/drift-fix.template.md
     type: related
     note: Step 7 runs the read-only drift SENSOR only; the gated drift ACTUATOR is the separate drift-fix skill — never auto-fixed inside the sync.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Every {company-slot} below binds to a field of this manifest schema (input_adapters, taxonomy, vocab, frontmatter_schema, cadence, scan_roots, entity_registry).
 status: current

@@ -1,10 +1,10 @@
 ---
 description: The field-by-field frontmatter node-record table for the data-model contract — each frontmatter key, whether required, the axis it sits on, the {company-slot} vocabulary that constrains it, and the manifest field that fills it. Mechanism only; vocab values are {company-slot} markers, never literals.
 references:
-  - path: __Framework/templates/data-model/data-model.template.md
+  - path: templates/data-model/data-model.template.md
     type: long-form
     note: The prose contract this table accompanies — §1 (node record), §4 (node_kind), §5 (two-axis freshness), §6 (TL;DR-head) explain each row.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The machine form — the "Fills from (manifest path)" column points into company_profile.* here.
 status: current

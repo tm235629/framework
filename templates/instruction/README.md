@@ -1,10 +1,10 @@
 ---
 description: The instruction layer of the templates library — the two reusable agent-instruction shapes (root navigation hub + nested per-folder rule file) with {company-slot} markers, and how a new instance fills them from the manifest.
 references:
-  - path: __Framework/templates/README.md
+  - path: templates/README.md
     type: related
     note: The parent templates index this layer is one row of.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema both templates' {slots} bind to.
 status: current

@@ -1,10 +1,10 @@
 ---
 description: Generalized writing-style contract — emphasis, formatting, tone, and document-specific rules for all generated content (syncs, overviews, timelines, to-do lists, summaries). Mechanism only; staff names and section vocabulary are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.entity_registry.people (staff names to keep out of public copy) + brand.
-  - path: __Framework/templates/standards/output-schema.template.md
+  - path: templates/standards/output-schema.template.md
     type: related
     note: The periodic report's anonymisation + voice rules elaborate the public-vs-private staff-naming rule this contract states.
 status: current

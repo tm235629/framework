@@ -1,7 +1,7 @@
 ---
 description: Living decision log for the replication framework — what's been decided, what's open, and the recommended default for each open choice. This is where the design's learning process is recorded.
 references:
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: Decisions refine the architecture.
 status: draft
@@ -57,14 +57,14 @@ ruling (minimize-A applies to our own process too).
 - **Federation (later, optional):** at most a read-only aggregation view over *selected shareable slices* of
   multiple instances, explicitly gated on confidentiality. Not a default; many slices (financial/HR/legal)
   should never be pooled. Revisit only once multiple instances exist.
-- **Manifest built 2026-06-21** — `__Framework/tooling/{config.schema.json, manifest.mot.json}` (the C→B
+- **Manifest built 2026-06-21** — `tooling/{config.schema.json, manifest.mot.json}` (the C→B
   contract; MOT = Instance Zero, company/person split). Reference artifact; **not yet wired** to live B-tools
   (we don't rewrite working tooling). Next: parameterize one B-tool to read it (e.g. a single excludes source).
 - **Single-source-of-truth risks surfaced by the manifest extraction** (the manifest should collapse these):
   (1) excludes triplicated across `excludes.json` + `server.js` + the C++ walker `SKIP_DIRS`; (2)
   `supply_chain_role` uncontrolled (11+ free-form values) — needs an enum; (3) `phase` enum has stray values
   (`target`, `Design`) — candidate drift-audit signal; (4) `skip_exts` lives only in the C++ walker.
-- **First B-library tool built 2026-06-22** — `__Framework/tooling/kb-index.mjs`, a manifest-driven graph
+- **First B-library tool built 2026-06-22** — `tooling/kb-index.mjs`, a manifest-driven graph
   indexer. PROVED the manifest fully parameterizes a deterministic tool: reproduces MOT's graph 100% on
   comparable nodes + reference edges, 99.88% category, 81/81 field spot-check (incl. the Bosch/STMicro pair).
   Validation: `tooling/_validation/REPORT.md`. Additive; MOT's live graph untouched.
@@ -89,7 +89,7 @@ ruling (minimize-A applies to our own process too).
   - **`supply_chain_roles`** — enum present but doesn't cover live values (`none`, `software_platform`,
     `research-partner`) and doesn't de-dupe synonyms (researcher/research, supplier/vendor).
   - **`raw_archive_roots`** (kb-audit) — explicit field instead of deriving `__temp/` from `input_adapters`.
-  - Minor: exclude `__Framework/tooling/_validation/` from the framework's own indexing/audit (its sample files show as drift).
-- **Templates layer started** — `__Framework/templates/{README.md, drift-detection/SPEC.md}` (generalized
+  - Minor: exclude `tooling/_validation/` from the framework's own indexing/audit (its sample files show as drift).
+- **Templates layer started** — `templates/{README.md, drift-detection/SPEC.md}` (generalized
   drift-detection mechanism with `{company-slot}` markers, pointing at `kb-audit.mjs`). Next templates:
   instruction (routing-table), standards, data-model, skills, registries; plus the `migration/` reversible kit.

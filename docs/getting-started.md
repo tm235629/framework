@@ -4,10 +4,10 @@ references:
   - path: ../bootstrap/RUN.md
     type: related
     note: The terse copy-paste launcher this guide narrates.
-  - path: manifest-reference.md
+  - path: ./manifest-reference.md
     type: related
     note: Field-by-field reference for the manifest you build in step 3.
-  - path: tools.md
+  - path: ./tools.md
     type: related
     note: What each kb-* tool in the step-4 chain does.
 status: current

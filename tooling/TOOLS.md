@@ -1,25 +1,22 @@
 ---
 description: Operator reference for the B-library — the manifest-driven deterministic tools (kb-index/kb-extract/kb-walk/kb-audit/kb-entities/kb-focus) plus the reversible migration kit. Per-tool inputs/outputs/run-command/MOT counterpart/validated fidelity, the chain diagram, and the safety contract.
 references:
-  - path: __Framework/tooling/README.md
+  - path: tooling/README.md
     type: sibling
     note: The manifest — config.schema.json (mechanism) + manifest.mot.json (Instance Zero); these tools are pure functions of it.
-  - path: __Framework/slices/focus-detector/VALIDATION.md
+  - path: slices/focus-detector/VALIDATION.md
     type: builds-on
     note: kb-focus productionizes the validated v1 focus-detector from this slice (v2/v3 hard-excludes deliberately NOT used — they backfired).
-  - path: __Framework/tooling/manifest.mot.json
+  - path: tooling/manifest.example.json
     type: standard
-    note: The single source every tool below reads; every field named here is a real manifest slot.
-  - path: __Framework/tooling/_validation/REPORT.md
-    type: related
-    note: kb-index validation (100% comparable nodes, 100% non-catalog ref edges, 81/81 field spot-check).
-  - path: __Framework/migration/PLAYBOOK.md
+    note: The shipped synthetic manifest every tool reads; every field named here is a real manifest slot (the reference instance's filled manifest is not shipped).
+  - path: migration/PLAYBOOK.md
     type: long-form
     note: The two-gate migration procedure the migration kit executes.
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: builds-on
     note: §3 B/C/A ladder, §4 the manifest C→B contract — the model these tools instantiate.
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: related
     note: Phase 0 (inventory), Phase 3 (tooling stand-up), Phase 9 (drift loop) place these tools in the pipeline.
 status: current
@@ -66,7 +63,7 @@ reference instance's filled manifest.
   `frontmatter_schema.{required_fields, optional_fields}`. Note: it applies **only** `conflict_pattern`
   for name exclusion (not `skip_names` — that is walker-scoped; GAP-1 per-tool scoping), so `_catalog.md` is indexed exactly as MOT indexes it.
 - **Emits:** `_validation/graph-index.kb.json` — `{generated_at, root, manifest, files[], containment[], references[], counts}`.
-- **Run:** `node __Framework/tooling/kb-index.mjs [manifest] [--out PATH]` (`--out -` → stdout).
+- **Run:** `node tooling/kb-index.mjs [manifest] [--out PATH]` (`--out -` → stdout).
 - **Fidelity vs MOT:** **100% of comparable nodes** (842/842) and **100% of non-`_catalog` reference edges**
   (1247/1247); category agreement 99.88% (1 miss = GAP-2 catch-all rule, since added); field spot-check **81/81**
   including the Bosch/STMicro confusable pair (correct distinct verticals + phases). See `_validation/REPORT.md`.
@@ -81,7 +78,7 @@ reference instance's filled manifest.
   Aquisition/Internal/Collaboration/Archive), `frontmatter_schema.tldr_keys.{canonical, date_anchored_key}`,
   `vocab.{tier_scale, node_kinds}`; reuses the kb-index graph build (or `--index` a prebuilt one).
 - **Emits:** `_validation/projects.kb.json` — `{count, card_total, projects[] (tiles), tldr_key_coverage}`.
-- **Run:** `node __Framework/tooling/kb-extract.mjs [manifest] [--out PATH] [--index PATH]`.
+- **Run:** `node tooling/kb-extract.mjs [manifest] [--out PATH] [--index PATH]`.
 - **Fidelity vs MOT:** **100%** vs `Dashboard/data/projects.json` (tile set + per-card axes reproduce 1:1).
 
 ### kb-walk.mjs — `_catalog.md` generator (dry-run validator)
@@ -97,7 +94,7 @@ reference instance's filled manifest.
 - **Emits:** generated samples as `*.sample.md` + `validation-summary.json` under
   `_validation/catalogs-sample/`. **It contains no code path that writes a file named `_catalog.md`** — a hard-pinned
   out-dir + an `assertSafeOut()` basename check enforce this.
-- **Run:** `node __Framework/tooling/kb-walk.mjs [manifest] [--sample N] [--seed S] [--out-dir DIR] [--json]`.
+- **Run:** `node tooling/kb-walk.mjs [manifest] [--sample N] [--seed S] [--out-dir DIR] [--json]`.
 - **Fidelity vs MOT:** **49/50 byte-identical** against live catalogs; the single miss is a stale live file, not a
   generator divergence.
 
@@ -112,7 +109,7 @@ reference instance's filled manifest.
   `frontmatter_schema.{required_fields, tldr_keys}`, `taxonomy.category_rules`, `raw_archive_roots`
   (provenance dead-ref reclassification), `frontmatter_schema.avoid_read_marker` (head-only TL;DR read).
 - **Emits:** `_validation/drift.kb.json` — `{counts, findings[]}` (same shape as MOT's `data/drift.json`).
-- **Run:** `node __Framework/tooling/kb-audit.mjs [manifest] [--out PATH] [--json]`.
+- **Run:** `node tooling/kb-audit.mjs [manifest] [--out PATH] [--json]`.
 - **Fidelity vs MOT:** **99.8%** vs `Dashboard/data/drift.json`; the deltas are OneDrive `mtime` tiebreak +
   concurrent validation files, not logic differences.
 
@@ -130,7 +127,7 @@ reference instance's filled manifest.
   **This is the one core tool that writes a derived file outside `_validation/`** — additive, beside
   `projects.json`/`sync.json`, served at `/api/data/entities.json`; it modifies nothing else. `--check` validates
   without writing; `--out -` prints to stdout.
-- **Run:** `node __Framework/tooling/kb-entities.mjs [manifest] [--graph PATH] [--out PATH] [--check]`.
+- **Run:** `node tooling/kb-entities.mjs [manifest] [--graph PATH] [--out PATH] [--check]`.
 - **Fidelity vs MOT:** registry resolves **6 people / 67 companies** from the manifest + graph (the two sources
   that already held the truth).
 
@@ -151,7 +148,7 @@ reference instance's filled manifest.
 - **Emits:** `_validation/person_profile.focus.kb.json` — the proposed `{focus_verticals, focus_tiers,
   focus_contexts, focus_entities, focus_document_kinds, extra_entities:[], _detection_meta:{method, signals_used,
   confidence, shared_drive_caveat}, _flagged_company_central, _signals}`. `--out -` prints the focus block to stdout.
-- **Run:** `node __Framework/tooling/kb-focus.mjs [manifest] [graph-index] [--graph PATH] [--out PATH] [--json]`.
+- **Run:** `node tooling/kb-focus.mjs [manifest] [graph-index] [--graph PATH] [--out PATH] [--json]`.
 - **Fidelity vs MOT:** **reproduces the slice's `person_profile.detected.json` exactly** — `focus_verticals`
   `[Equipment, Foundry]`, `focus_tiers` `[1, 2]`, the four tester `focus_contexts`
   (bosch-bmv190 / elsoft-wafer / elsoft-wafer-stmicro / stmicro-swir), and `focus_entities`
@@ -175,7 +172,7 @@ executed_moves`) into a manifest-driven kit that flattens any messy tree into a 
 - **Emits:** `_validation/inventory.sample.json` (gate-1 input). The **only tool run on the reference instance** in
   the build task (read-only; SHA-1 streams the file, never modifies it). Validation samples: full + PDF-only against
   the reference instance's `__Literature`.
-- **Run:** `node __Framework/migration/inventory.mjs [manifest] [--out FILE] [--limit N] [--no-hash] [--json]`.
+- **Run:** `node migration/inventory.mjs [manifest] [--out FILE] [--limit N] [--no-hash] [--json]`.
 
 ### plan-renames.mjs — Phase 2, propose-only
 - **Purpose:** propose a `rename_map.json` (`moves[]` + `superseded[]`) from the inventory + manifest taxonomy/
@@ -185,14 +182,14 @@ executed_moves`) into a manifest-driven kit that flattens any messy tree into a 
 - **Reads:** `migration_profile.{target_layout, filename_template, metadata_sources, min_confident_source}`,
   `taxonomy.category_rules` (path→category fallback).
 - **Emits:** `_validation/rename_map.sample.json` (gate-2 review artifact).
-- **Run:** `node __Framework/migration/plan-renames.mjs <inventory.json> [manifest] [--metadata FILE] [--out FILE]`.
+- **Run:** `node migration/plan-renames.mjs <inventory.json> [manifest] [--metadata FILE] [--out FILE]`.
 
 ### apply-moves.mjs — Phase 3, gated reversible executor
 - **Purpose:** execute an approved `rename_map`, logging every op to `executed_moves.json` for exact reverse-replay
   rollback. **Default is dry-run** (prints the change-plan, writes nothing).
 - **Reads:** `storage_profile.{root, churn_guards, lock_guards}` (synced-cloud no-clobber + EBUSY/EPERM retry).
 - **Emits:** `_validation/executed_moves.sample.json` (apply log; reverse-replayable).
-- **Run:** `node __Framework/migration/apply-moves.mjs <rename_map.json> [manifest]` →
+- **Run:** `node migration/apply-moves.mjs <rename_map.json> [manifest]` →
   `--apply` (gate 2) | `--rollback FILE`.
 - **Safety:** `--apply` is **hard-refused on a protected live Drive** (the manifest's
   `storage_profile.protected_root_markers`; the reference instance fills `OneDrive - MetaOptics`) — there is no code

@@ -39,12 +39,12 @@
  * never guesses silently.
  *
  * Usage (against a NON-MOT Drive):
- *   node __Framework/migration/plan-renames.mjs <inventory.json> [manifestPath] [opts]
+ *   node migration/plan-renames.mjs <inventory.json> [manifestPath] [opts]
  *     --metadata FILE   optional resolved-metadata sidecar (C-rung output:
  *                       rel → {title,authors,year,journal,category,source})
  *     --out FILE        rename map path (default _validation/rename_map.sample.json)
  *     --json            print the plan summary to stdout
- *   default manifestPath = __Framework/tooling/manifest.json (pass manifest.mot.json explicitly for the reference instance)
+ *   default manifestPath = tooling/manifest.json (pass manifest.mot.json explicitly for the reference instance)
  */
 
 import fs from 'fs';

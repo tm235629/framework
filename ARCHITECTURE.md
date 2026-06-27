@@ -1,9 +1,6 @@
 ---
 description: The conceptual core of the replication framework — the knowledge-OS pattern generalized, the B/C/A escalation ladder, the manifest contract, and the two libraries (deterministic tools vs reasoning modules).
-references:
-  - path: __Operations/Documentation/Standards
-    type: related
-    note: Generalizes — this framework abstracts MetaOptics' Standards/ stack into reusable templates; that folder is the worked instance. (SETUP_SEQUENCE owns its edge to here, per define-once.)
+references: None
 status: draft
 context: framework-architecture
 tags: [framework-meta]
@@ -174,7 +171,7 @@ hold are company-specific.
    JSON/PDF/catalogs are regenerable.**
 6. **Learnings feedback loop** — a shared, append-only, topic-scoped log whose entries *graduate*
    into binding Standards. The mechanism by which both a company instance *and this framework itself*
-   self-document and improve. (This framework keeps its own loop at `__Framework/Learnings/`.)
+   self-document and improve. (This framework keeps its own loop at `Learnings/`.)
 
 ---
 
@@ -265,7 +262,7 @@ the two can *learn from each other* — nothing more. The reference instance is 
   framework templates**; conversely a framework idea can suggest an additive improvement to the reference
   instance. The link runs both ways but is opportunistic, not obligatory.
 - Two learning journals stay separate: the reference instance's operational
-  `__Operations/Documentation/Learnings/` feeds its Standards; `__Framework/Learnings/` feeds the reusable templates.
+  `__Operations/Documentation/Learnings/` feeds its Standards; `Learnings/` feeds the reusable templates.
 
 **Practical rule:** extract abstractions *from* working artifacts rather than speculating ahead of them —
 but don't force the reference instance to carry framework experiments it doesn't need.

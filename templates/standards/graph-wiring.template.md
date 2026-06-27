@@ -1,13 +1,13 @@
 ---
-description: Generalized graph-wiring contract — the typed references[] cross-link schema: entry format, the define-once + containment-free rules, the controlled edge-type vocabulary, node_kind structural roles, topic hubs, and the validator. Mechanism only; the edge vocab, node_kinds, and required fields are {company-slot}s from the manifest.
+description: Generalized graph-wiring contract — the typed references[] cross-link schema — entry format, the define-once + containment-free rules, the controlled edge-type vocabulary, node_kind structural roles, topic hubs, and the validator. Mechanism only; the edge vocab, node_kinds, and required fields are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.vocab.{edge_types,node_kinds} + frontmatter_schema.required_fields.
-  - path: __Framework/tooling/kb-index.mjs
+  - path: tooling/kb-index.mjs
     type: tool
     note: The frontmatter graph indexer that reads references[] into the graph; the consumer of this contract.
-  - path: __Framework/templates/standards/lifecycle.template.md
+  - path: templates/standards/lifecycle.template.md
     type: related
     note: The lifecycle/supersession edge subset is defined + governed there; this contract covers the non-lifecycle vocabulary.
 status: current

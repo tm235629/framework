@@ -1,13 +1,13 @@
 ---
 description: Generalized lifecycle contract — the status enum, the context-registry guardrail, supersession edges, current-position blocks, decision records, naming/archive conventions, and the autonomy tiers. Mechanism only; status values + context tags + edge types are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.vocab.{status_enum,edge_types}, company_profile.context_registry, taxonomy.category_rules.
-  - path: __Framework/templates/standards/graph-wiring.template.md
+  - path: templates/standards/graph-wiring.template.md
     type: related
     note: The supersession edge is one of the typed reference edges whose vocabulary that contract governs.
-  - path: __Framework/templates/standards/placement.template.md
+  - path: templates/standards/placement.template.md
     type: related
     note: Rule 11 (closed-in-place vs terminated) consumes §9's status-vs-phase split and the archive gate.
 status: current

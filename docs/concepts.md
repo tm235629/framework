@@ -4,7 +4,7 @@ references:
   - path: ../ARCHITECTURE.md
     type: builds-on
     note: The full conceptual core; this is its user-facing condensation.
-  - path: manifest-reference.md
+  - path: ./manifest-reference.md
     type: related
     note: The concrete shape of the C→B seam described here.
 status: current

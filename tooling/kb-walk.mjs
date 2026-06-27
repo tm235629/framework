@@ -21,27 +21,25 @@
  * code path in this file that writes a file named `_catalog.md`. It:
  *   1. walks the tree (in memory, read-only) and BUILDS catalog content as strings;
  *   2. for a SAMPLE of folders that already have a live `_catalog.md`, writes the
- *      GENERATED text to __Framework/tooling/_validation/catalogs-sample/<safe>.md
+ *      GENERATED text to tooling/_validation/catalogs-sample/<safe>.md
  *      (a NON-_catalog filename, under the framework's own tooling tree);
  *   3. reads each live `_catalog.md` read-only and reports reproduction fidelity.
- * The single output directory is hard-pinned under __Framework/tooling/. The only
+ * The single output directory is hard-pinned under tooling/. The only
  * basename this script ever passes to fs.writeFileSync ends in `.sample.md`, never
  * `_catalog.md` — see assertSafeOut().
  *
  * Usage:
- *   node __Framework/tooling/kb-walk.mjs [manifestPath] [options]
+ *   node tooling/kb-walk.mjs [manifestPath] [options]
  *     --sample N         number of live-catalog folders to validate (default 10)
  *     --seed S           deterministic sample selection seed (default 0)
  *     --out-dir DIR      where to write generated samples + REPORT data
- *                        (default __Framework/tooling/_validation/catalogs-sample)
+ *                        (default tooling/_validation/catalogs-sample)
  *     --json             print the validation summary as JSON to stdout
  *   default manifestPath = manifest.example.json (shipped demo; copy to manifest.json and edit for your Drive)
  *
- * Frontmatter parsing: we reuse MOT's gray-matter (under
- * __Operations/Dashboard/node_modules) so parsing is apples-to-apples with the
- * live tooling. NOTE: a real framework DEPLOYMENT would VENDOR gray-matter (or a
- * tiny YAML parser) into __Framework/tooling/ so the B-library has no dependency
- * on a sibling instance's node_modules. (kb-walk only needs it to READ existing
+ * Frontmatter parsing uses gray-matter, declared in this package's package.json
+ * and installed standalone via `npm install` in tooling/. The B-library has no
+ * dependency on any sibling instance's node_modules. (kb-walk only needs it to READ existing
  * catalog frontmatter for comparison; the GENERATOR half emits YAML by hand,
  * byte-matching the C++ walker.)
  */
@@ -55,7 +53,7 @@ const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ── gray-matter resolved from tooling/node_modules (bare import) ──
-// Standalone: `npm install` in __Framework/tooling/ installs gray-matter here.
+// Standalone: `npm install` in tooling/ installs gray-matter here.
 
 // ── Manifest load (the ONLY source of paths/rules/classification) ────────────
 function loadManifest(manifestPath) {

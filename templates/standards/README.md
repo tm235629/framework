@@ -1,13 +1,13 @@
 ---
 description: The governance-stack template index — the eight generalized Standards contracts (placement, lifecycle, quality, style, info-distribution, output-schema, input-format, graph-wiring) that any instance fills from its manifest. Mechanism only; values live in the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema whose company_profile slots every contract's {company-slot} markers bind to.
-  - path: __Framework/templates/README.md
+  - path: templates/README.md
     type: related
     note: The templates layer this standards/ stack sits inside — mechanism vs company-slot split.
-  - path: __Framework/templates/drift-detection/SPEC.md
+  - path: templates/drift-detection/SPEC.md
     type: related
     note: The drift auditor is the SENSOR that enforces these contracts at steady state; this stack is its setpoint half.
 status: current

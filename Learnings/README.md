@@ -1,9 +1,6 @@
 ---
 description: The framework's OWN learning journal — meta-lessons about replicating the knowledge-OS, distinct from MOT's operational Learnings. Stable entries graduate into the framework templates.
-references:
-  - path: __Operations/Documentation/Learnings
-    type: related
-    note: Generalizes — same contract as MOT's operational Learnings loop, scoped to framework/replication lessons rather than MOT operations.
+references: None
 status: draft
 context: framework-architecture
 tags: [framework-meta]
@@ -20,7 +17,7 @@ node_kind: topic
 Meta-lessons about **building and replicating the knowledge-OS**, captured as we co-develop with MOT
 (Instance Zero). Distinct from `__Operations/Documentation/Learnings/`, which holds MOT's *operational*
 lessons. A lesson here is *general* — it should change how the **next instance** is built. When stable, it
-**graduates into `__Framework/templates/`**.
+**graduates into `templates/`**.
 
 ## Contract (same shape as MOT's)
 - One file per **topic**, not per session. This README seeds the index; topic files are added beside it.
@@ -89,7 +86,7 @@ lessons. A lesson here is *general* — it should change how the **next instance
 
 ### migration-kit
 - 2026-06-22 — **What:** generalized MOT's one-off `__Literature/_migration` Python run into the
-  manifest-driven `__Framework/migration/` kit (inventory.mjs / plan-renames.mjs / apply-moves.mjs +
+  manifest-driven `migration/` kit (inventory.mjs / plan-renames.mjs / apply-moves.mjs +
   PLAYBOOK). Re-running the read-only `inventory.mjs` over today's `__Literature` reproduced the historical
   Phase-1 counts (459 PDFs · 26 exact-dup groups · 4 same-name groups — deltas = the 2 dups the original run
   already parked), validating the generalization the same "reproduce-from-manifest" way the B-library was.

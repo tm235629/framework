@@ -1,10 +1,10 @@
 ---
 description: Generalized root navigation-hub template — the classify-before-reading routing table (generic archetype rows), the three autonomy tiers, the avoid-read convention, and the superseded/legacy convention. Index, people, CLI, and triggers are {company-slot} markers filled from the manifest. Mechanism only; no company values.
 references:
-  - path: __Framework/templates/instruction/nested-rule-file.template.md
+  - path: templates/instruction/nested-rule-file.template.md
     type: related
     note: The body template for the per-folder rule files this hub's "Focused folder work" row routes the agent into.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema every {company-slot} below binds to — the single source of filled-in values.
   - path: CLAUDE.md

@@ -1,16 +1,16 @@
 ---
 description: The drift-fix actuator skill skeleton — the generalized form of MOT's drift-fix. Runs the read-only manifest-driven drift audit (kb-audit.mjs), dry-runs the fixer, and on explicit user approval applies ONLY the three safe tier-1 auto-fix classes; tier-2 announce + tier-3 needs_judgment findings are presented as a decision list, never auto-acted on. Dry-run + approval always precede any apply. Every company value is a {company-slot} naming its manifest field.
 references:
-  - path: __Framework/tooling/kb-audit.mjs
+  - path: tooling/kb-audit.mjs
     type: tool
     note: The read-only SENSOR this actuator consumes — the manifest-driven drift auditor; pure function of manifest.json, emits the drift report.
-  - path: __Framework/templates/drift-detection/SPEC.md
+  - path: templates/drift-detection/SPEC.md
     type: standard
     note: The design spec this skill implements (the actuator half of the sensor+actuator control loop) — the three safe auto-fix classes, the autonomy-tier routing, and the safety model.
-  - path: __Framework/templates/skills/periodic-sync.template.md
+  - path: templates/skills/periodic-sync.template.md
     type: related
     note: The orchestrator's Step 7 runs the SENSOR only; this gated ACTUATOR is deliberately separate so the sync never auto-fixes beyond tier-1/2 supersession annotations.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The fixer's vocab targets (edge_types.legacy → valid repoint, status_enum, required_fields) and the manifest path it audits against all come from this schema.
 status: current
@@ -63,7 +63,7 @@ Run the read-only audit so the plan is computed against current state:
 node {audit-tool} {manifest-path}
 ```
 
-(`{audit-tool}` = `__Framework/tooling/kb-audit.mjs`; `{manifest-path}` = the instance's `manifest.json`.)
+(`{audit-tool}` = `tooling/kb-audit.mjs`; `{manifest-path}` = the instance's `manifest.json`.)
 Note the headline counts (high / med / low; fixable / needs_judgment). This writes the drift report (the
 actuator's input). **Nothing is mutated.**
 

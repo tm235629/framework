@@ -1,10 +1,10 @@
 ---
 description: Generalized quality contract — the TL;DR dashboard-card contract + content/freshness requirements for project Overview files. Mechanism only; the canonical TL;DR keys, freshness anchor, and phase enum are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.frontmatter_schema.tldr_keys (canonical + date_anchored_key) and vocab.phase_enum.
-  - path: __Framework/tooling/kb-extract.mjs
+  - path: tooling/kb-extract.mjs
     type: tool
     note: The card extractor that parses the TL;DR block into dashboard project cards — the consumer of this contract.
 status: current

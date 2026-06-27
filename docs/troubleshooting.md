@@ -1,10 +1,10 @@
 ---
 description: Troubleshooting + FAQ for the knowledge-OS framework — the common failures (manifest not found, 0 files, jq on Windows, migration safety refusals, dead links on a fresh clone) and what each one means. Symptom → cause → fix.
 references:
-  - path: getting-started.md
+  - path: ./getting-started.md
     type: related
     note: The happy path these symptoms deviate from.
-  - path: tools.md
+  - path: ./tools.md
     type: related
     note: The tools whose flags/behavior these entries explain.
 status: current
@@ -39,14 +39,12 @@ before the stdout check). Fixed — `--out -` now prints to stdout.
 from.
 
 <a id="paths"></a>
-## A copied command can't find a file under `__Framework/tooling/...`
-**Cause:** some `bootstrap/` runbooks still use the **pre-reorg absolute prefix** `__Framework/tooling/...`.
-After the framework was split into `__Framework/framework/` (the shippable core) + `__Framework/_instance/`
-(private data), the correct in-Drive path is `__Framework/framework/tooling/...`; in a standalone `git clone`
-there is no `__Framework` prefix at all — paths are relative to the repo root (`tooling/...`).
-**Fix:** run commands **from the framework repo root** and use repo-root-relative paths (`node
-tooling/kb-index.mjs ...`), as this `docs/` guide does. (Normalizing the older runbooks to this convention is a
-tracked follow-up.)
+## A copied command can't find a file (path resolution)
+**Cause:** you ran the command from the wrong directory, or copied it from an old checkout. All commands and
+frontmatter references in the framework are **relative to the repo root** (the folder containing `tooling/`,
+`bootstrap/`, etc.).
+**Fix:** run commands **from the repo root** — `node tooling/kb-index.mjs ...`, not from inside `tooling/`.
+Inside the MetaOptics Drive the repo root is the `__Framework/framework/` folder.
 
 ## A command references `manifest.mot.json` or `company-seed.json` and the file isn't there
 **Cause:** those are the **reference instance's filled, private** files — gitignored and **not shipped**. Only

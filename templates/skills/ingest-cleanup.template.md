@@ -1,10 +1,10 @@
 ---
 description: The safe-janitor skill skeleton — the generalized form of MOT's email-cleanup. Stages adapter junk (zero-byte placeholders, signature/icon images, generic inline images) to a review folder, flags borderline cases, and deduplicates recurring assets against a known-signatures reference. Never deletes. Parameterized by the inbox adapter's junk patterns and the raw-archive root; every company value is a {company-slot} naming its manifest field.
 references:
-  - path: __Framework/templates/skills/periodic-sync.template.md
+  - path: templates/skills/periodic-sync.template.md
     type: trigger
     note: The orchestrator that invokes this janitor after each ingest pass (Step 1 light-mode cleanup + the after-run cleanup).
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The junk patterns ({email-adapter.junk_patterns}), the archive location, and the raw-archive root all come from this manifest schema (input_adapters.email, raw_archive_roots).
 status: current

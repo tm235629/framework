@@ -1,19 +1,19 @@
 ---
-description: Operator runbook for standing up a SAME-COMPANY teammate instance (the federated path) — a CONFIGURATION of the shared company-invariants, not a new instance. Concrete checklist: seed company_profile verbatim, focus-detect the person_profile, plug the input adapter, point the root override, register confusable workstreams, run kb-index/kb-audit. Worked example: the CFO (different focus from VP-Systems).
+description: Operator runbook for standing up a SAME-COMPANY teammate instance (the federated path) — a CONFIGURATION of the shared company-invariants, not a new instance. Concrete checklist — seed company_profile verbatim, focus-detect the person_profile, plug the input adapter, point the root override, register confusable workstreams, run kb-index/kb-audit. Worked example — the CFO (different focus from VP-Systems).
 references:
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: builds-on
     note: This is the TEAMMATE branch of the top-level bifurcation — Phases 1-4 collapse to near-no-ops because the company_profile is seeded, not re-derived.
-  - path: __Framework/tooling/manifest.mot.json
+  - path: tooling/manifest.example.json
     type: source
-    note: Instance Zero — the filled company_profile this runbook copies verbatim as the shared seed, and the person_profile shape the focus-detector fills.
-  - path: __Framework/tooling/config.schema.json
+    note: The shipped synthetic manifest — the company_profile shape this runbook copies verbatim as the shared seed, and the person_profile shape the focus-detector fills (the reference instance's filled manifest is not shipped).
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema every step validates against; the company_profile/person_profile split is the structural basis of the whole runbook.
-  - path: __Framework/slices/focus-detector/VALIDATION.md
+  - path: slices/focus-detector/VALIDATION.md
     type: related
     note: What the v1 focus-detector recovers from structure alone, and the shared-drive caveat (Step 2 cites its findings + limits).
-  - path: __Framework/templates/registries/README.md
+  - path: templates/registries/README.md
     type: related
     note: The register-before-use rule and extra_entities-extends-never-overwrites contract that Steps 2 and 5 enforce.
 status: current
@@ -82,7 +82,7 @@ company-invariants, identical for every teammate:
 # the only "Phase 1-3" work for a teammate: lift the shared seed.
 # (jq shown for clarity; copy/paste is equally valid — it is verbatim.)
 jq '{manifest_version, company_profile}' \
-  "__Framework/tooling/manifest.mot.json" > "<teammate-drive>/manifest.json"
+  "tooling/manifest.mot.json" > "<teammate-drive>/manifest.json"
 ```
 
 Then append a fresh `person_profile` shell (filled in Steps 2-4). The result must validate against
@@ -204,11 +204,11 @@ their absolute Drive root; the instance composes person-over-company, so the ove
 Do not paste the reference instance's values.)*
 
 The B-tools take the **manifest path as their first positional argument** (default
-`__Framework/tooling/manifest.mot.json`), so "pointing at their Drive" is simply passing **their**
+`tooling/manifest.mot.json`), so "pointing at their Drive" is simply passing **their**
 `manifest.json`:
 
 ```bash
-node __Framework/tooling/kb-index.mjs "<teammate-drive>/manifest.json" --out "<teammate-drive>/data/graph-index.json"
+node tooling/kb-index.mjs "<teammate-drive>/manifest.json" --out "<teammate-drive>/data/graph-index.json"
 ```
 
 Keep the override **in the person profile**, not the shared `storage_profile.root` — that field stays the
@@ -243,10 +243,10 @@ Build the instance's graph index, then run the drift auditor against it — both
 
 ```bash
 # 1. graph index — the derived state every other tool reads
-node __Framework/tooling/kb-index.mjs   "<teammate-drive>/manifest.json"  --out "<teammate-drive>/data/graph-index.json"
+node tooling/kb-index.mjs   "<teammate-drive>/manifest.json"  --out "<teammate-drive>/data/graph-index.json"
 
 # 2. drift audit — the Phase-9 sensor; structurally identical audit, different manifest → different findings
-node __Framework/tooling/kb-audit.mjs   "<teammate-drive>/manifest.json"  --json
+node tooling/kb-audit.mjs   "<teammate-drive>/manifest.json"  --json
 ```
 
 `kb-audit` is the standing drift sensor: missing frontmatter, unplaced files, stale `valid_as_of`, dead

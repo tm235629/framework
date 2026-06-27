@@ -1,10 +1,10 @@
 ---
 description: The generalized DATA-MODEL contract — the human-facing spec that config.schema.json formalizes. The frontmatter node record, the typed node/edge graph (containment-is-free, define-once, controlled edge vocab), node_kind for derived hierarchy, the TL;DR-head dual-purpose digest, the two-axis freshness model, and the large-mutable→small-derived read-budget convention. Mechanism only; every company-specific vocabulary/enum/field is a {company-slot} drawn from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The machine form of this contract. Every {company-slot} here resolves to a field under company_profile.{frontmatter_schema,vocab,taxonomy,raw_archive_roots} — this doc is the spec, that schema is its validator.
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: §6 layer 1 ("Data-model — the contract every other layer binds to; design it first") is the layer this template materializes; §1 defines the knowledge-OS graph it formalizes.
 status: current

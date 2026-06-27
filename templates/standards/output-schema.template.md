@@ -1,13 +1,13 @@
 ---
 description: Generalized output-schema contract for the periodic report — the public (category-first) vs internal (entity-first) layouts, source-extraction rules, the anonymisation pivot, the carryover/age-out gate, and the pre-publication QA checklist. Mechanism only; verticals, staff, cadence, and tier scale are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.cadence, vocab.{verticals,tier_scale}, entity_registry.people.
-  - path: __Framework/templates/standards/info-distribution.template.md
+  - path: templates/standards/info-distribution.template.md
     type: related
     note: This is View 2's full content schema; info-distribution gives the higher-level three-view structure.
-  - path: __Framework/templates/standards/input-format.template.md
+  - path: templates/standards/input-format.template.md
     type: related
     note: §A's source-extraction rules consume the email/meeting input format that contract specs.
 status: current

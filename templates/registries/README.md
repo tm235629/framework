@@ -1,10 +1,10 @@
 ---
 description: The registries/ template layer — the two SEED registries (entity + context) a new instance fills FIRST, why they come first, what each {company-slot} binds to in the manifest, and how the focus-detector extends the entity seed per person.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema these templates' {company-slot}s bind to — entity-registry → company_profile.entity_registry; context-registry → company_profile.context_registry.
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: §7 (the entity-registry-first lesson — the SOT the original never built) and §11 (federation; the focus-detector extending a person's entities) are the rationale this layer materializes.
 status: current

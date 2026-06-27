@@ -1,10 +1,10 @@
 ---
 description: The templates layer — what the reusable mechanisms with {company-slot} markers are, and how a new instance fills them. Templates carry the shape; the manifest carries the values.
 references:
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: §2 (mechanism vs company-slot) and §6 (the six layers) are the model these templates materialize.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema whose slots every template's {placeholders} bind to — the single source of filled-in values.
 status: current

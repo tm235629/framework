@@ -1,7 +1,7 @@
 ---
 description: The idealized phased pipeline for standing up a knowledge-OS on a messy Drive, expressed as a C-orchestrated decision tree of deterministic tools, reasoning modules, and human gates — plus the steady-state drift loop.
 references:
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: builds-on
     note: Operationalizes the architecture.
 status: draft

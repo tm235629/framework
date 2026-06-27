@@ -1,10 +1,10 @@
 ---
 description: Generalized placement contract — the folder-tier model + cross-cutting rules (supplier-vs-customer split, location≠owner, duplicate-merge, archive gate, nested-subproject hub) that decide where any file/folder lives. Mechanism only; tiers/verticals are {company-slot}s from the manifest.
 references:
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Slots resolve from company_profile.taxonomy (project_tiers, category_rules, subfolder_convention) + vocab.{verticals,node_kinds}.
-  - path: __Framework/templates/standards/graph-wiring.template.md
+  - path: templates/standards/graph-wiring.template.md
     type: related
     note: Location≠owner (Rule 1D) and nested subprojects (Rule 12) are expressed as typed edges + node_kind defined there.
 status: current

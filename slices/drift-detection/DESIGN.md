@@ -1,12 +1,9 @@
 ---
 description: Design spec for the first co-development slice — additive drift detection (the sensor half of the control loop) built on the reference instance (MetaOptics/Instance Zero), generalizing into the framework's Phase-9 drift auditors.
 references:
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: related
     note: Implements Phase 9 (steady-state drift loop) on MOT as Instance Zero.
-  - path: __Operations/Dashboard/scripts/mot-tools.js
-    type: tool
-    note: The MOT implementation lands here as a new `audit` subcommand (the instance; this doc is the mechanism).
 status: current
 context: framework-architecture
 tags: [framework-meta]
@@ -124,7 +121,7 @@ A `mot-tools.js audit` subcommand emitting `data/drift.json`, covering exactly t
 
 ## What graduates to the framework (generalizable principles)
 
-Extract these into `__Framework/templates/` once proven on MOT:
+Extract these into `templates/` once proven on MOT:
 - **Sensor-where-the-data-lives:** put each check where its substrate already is (graph checks in the graph
   tool, tree checks in the tree-walker) — not one monolith.
 - **Auditor aggregates, never duplicates:** re-export existing validators into one unified drift surface.

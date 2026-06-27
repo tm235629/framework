@@ -1,21 +1,18 @@
 ---
 description: The gated, reversible, database-first migration procedure — inventory → gate 1 → rename_map → gate 2 → execute + verify, with surplus duplicates parked in _superseded/. Generalizes MOT's __Literature/_migration run into a manifest-driven kit; mechanism only, every company value is a manifest slot.
 references:
-  - path: __Framework/migration/inventory.mjs
+  - path: migration/inventory.mjs
     type: tool
     note: Phase 1 — the read-only manifest-driven inventory (sha1 + size + type + dup groups).
-  - path: __Framework/migration/plan-renames.mjs
+  - path: migration/plan-renames.mjs
     type: tool
     note: Phase 2 — proposes rename_map.json (moves[] + superseded[]) from inventory + taxonomy.
-  - path: __Framework/migration/apply-moves.mjs
+  - path: migration/apply-moves.mjs
     type: tool
     note: Phase 3 — gated reversible executor; default dry-run; writes executed_moves.json for exact rollback.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: company_profile.migration_profile is the manifest section whose slots fill this procedure (target_layout, filename_template, metadata ladder).
-  - path: __Literature/Papers/_catalog.md
-    type: source
-    note: The proven worked instance this kit generalizes — the __Literature database-first restructure (459 PDFs → flat Papers/ + sidecars) executed via the original Python _migration scripts.
 status: current
 context: framework-architecture
 tags: [framework-meta]
@@ -66,7 +63,7 @@ prior tree exactly.
 ## Phase 1 — inventory (read-only)
 
 ```
-node __Framework/migration/inventory.mjs <manifest.json> --out <dir>/inventory.json
+node migration/inventory.mjs <manifest.json> --out <dir>/inventory.json
 ```
 
 Walks `migration_profile.scan_roots` (the subtree being restructured), honouring `excludes.dirs` and
@@ -111,7 +108,7 @@ left on a source weaker than `min_confident_source` is flagged, not silently gue
 **2b (B):**
 
 ```
-node __Framework/migration/plan-renames.mjs <inventory.json> <manifest.json> [--metadata resolved.json] --out rename_map.json
+node migration/plan-renames.mjs <inventory.json> <manifest.json> [--metadata resolved.json] --out rename_map.json
 ```
 
 Emits `rename_map.json`:
@@ -139,10 +136,10 @@ Spot-check a sample of `old → new` rows. This is the go/no-go gate; nothing ha
 
 ```
 # DRY-RUN (default): pre-flight + change-plan, writes nothing
-node __Framework/migration/apply-moves.mjs <rename_map.json> <manifest.json>
+node migration/apply-moves.mjs <rename_map.json> <manifest.json>
 
 # APPLY (gate 2 passed; non-protected Drive): executes + logs executed_moves.json
-node __Framework/migration/apply-moves.mjs <rename_map.json> <manifest.json> --apply
+node migration/apply-moves.mjs <rename_map.json> <manifest.json> --apply
 ```
 
 Pre-flight verifies every source exists and no destination collides or pre-exists; a missing source that
@@ -159,7 +156,7 @@ the instance's own walker** (on MOT that is `mot-walker --write --prune`; this k
 ### Rollback — exact reverse replay
 
 ```
-node __Framework/migration/apply-moves.mjs --rollback executed_moves.json <manifest.json>
+node migration/apply-moves.mjs --rollback executed_moves.json <manifest.json>
 ```
 
 Replays the log **new → old in reverse order**, restoring the prior tree exactly. Because surplus copies

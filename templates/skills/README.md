@@ -1,13 +1,13 @@
 ---
 description: The WORKFLOW skill templates — generalized from MOT's .claude/commands/ into reusable, manifest-parameterized orchestrator skeletons (periodic-sync, ingest-cleanup, drift-fix). Mechanism only; every company value is a {company-slot} naming its manifest field.
 references:
-  - path: __Framework/templates/README.md
+  - path: templates/README.md
     type: sibling
     note: The parent templates layer this skills sub-library belongs to; that doc states the {company-slot}/manifest split these skills obey.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: Every {company-slot} in these skills binds to a field of this manifest schema — the single source of filled-in values.
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: §6 layer 4 (Skills / workflows) is the model these templates materialize — thin procedure over Standards, ending by regenerating derived indexes.
 status: current

@@ -1,7 +1,7 @@
 ---
 description: Entry point for the knowledge-OS replication framework — what it is, the B/C/A model, how this folder is organized, and how it is co-developed with the MetaOptics Drive (Instance Zero).
 references:
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: The conceptual core.
   - path: CLAUDE.md
@@ -59,7 +59,7 @@ company-invariants (verticals, partners) as a seed. Confidential data stays loca
 ## Folder map
 
 ```
-__Framework/
+framework/               ← the repo root (in the MetaOptics Drive: __Framework/framework/)
 ├── README.md            ← you are here
 ├── CLAUDE.md            ← agent guide for working in this folder
 ├── ARCHITECTURE.md      ← the six layers, the B/C/A ladder, the manifest, the drift loop, federation

@@ -1,10 +1,10 @@
 ---
 description: The generalized drift-detection template — the reusable sensor + actuator pattern (manifest-driven auditor, three safe auto-fix classes, autonomy-tier routing, drift-report artifact) with {company-slot} placeholders. Mechanism only; no company values.
 references:
-  - path: __Framework/tooling/kb-audit.mjs
+  - path: tooling/kb-audit.mjs
     type: tool
     note: The reusable B-tool this SPEC describes — the manifest-driven sensor. Pure function of manifest.json; swap the manifest, audit a different Drive.
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: related
     note: Drift detection is Phase 9 (the steady-state loop) of the idealized setup pipeline this template generalizes.
 status: current
@@ -31,7 +31,7 @@ enum, and path is a `{company-slot}` drawn from the manifest, never a literal in
 
 ## 1. The sensor — a manifest-driven auditor
 
-**Reusable B-tool:** [`__Framework/tooling/kb-audit.mjs`](../../tooling/kb-audit.mjs). It reuses the
+**Reusable B-tool:** [`tooling/kb-audit.mjs`](../../tooling/kb-audit.mjs). It reuses the
 graph build from the indexer (imported, never re-implemented) and **branches only on values it reads
 from the manifest** — `{edge-vocab}`, `{status-enum}`, `{required-fields}`, `{tldr-keys}`,
 `{category-rules}`. No `{scan-roots}` path literal appears in the audit *logic*. Run it against an

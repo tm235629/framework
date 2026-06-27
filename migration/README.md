@@ -1,13 +1,13 @@
 ---
 description: The migration/ layer — the reversible, gated, database-first MIGRATION kit. What each tool is, the two-gate procedure, and the safety contract that keeps it read-only on any protected live Drive (the reference instance is MetaOptics). Mechanism only; company values come from the manifest's migration_profile.
 references:
-  - path: __Framework/migration/PLAYBOOK.md
+  - path: migration/PLAYBOOK.md
     type: long-form
     note: The full phased procedure (inventory → gate 1 → rename_map → gate 2 → execute + verify, dups to _superseded/).
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: company_profile.migration_profile is the manifest section whose {slots} every tool here reads.
-  - path: __Framework/templates/README.md
+  - path: templates/README.md
     type: sibling
     note: Peer mechanism layer — the migration kit is the move-half; templates carry the static shapes.
 status: current

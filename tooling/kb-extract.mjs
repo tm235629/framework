@@ -32,19 +32,17 @@
  *     customer_refs) so a company adapter can build the family graph on top.
  *
  * Usage:
- *   node __Framework/tooling/kb-extract.mjs [manifestPath] [--out PATH] [--index PATH]
+ *   node tooling/kb-extract.mjs [manifestPath] [--out PATH] [--index PATH]
  *   default manifestPath = manifest.example.json (shipped demo; copy to manifest.json and edit for your Drive)
- *   default --out        = __Framework/tooling/_validation/projects.kb.json
+ *   default --out        = tooling/_validation/projects.kb.json
  *   --index PATH         = reuse a prebuilt kb-index graph json instead of walking
  *                          (default: build the index in-process via kb-index.mjs)
  *
- * Frontmatter parsing: reuses MOT's gray-matter (under
- * __Operations/Dashboard/node_modules) so this validation is apples-to-apples with
- * mot-tools.js. NOTE: a real framework DEPLOYMENT would VENDOR gray-matter into
- * __Framework/tooling/ so the B-library has no dependency on a sibling instance's
- * node_modules. For THIS validation exercise the shared parser is deliberate.
+ * Frontmatter parsing reuses kb-index.mjs's gray-matter, declared in this
+ * package's package.json and installed standalone via `npm install` in tooling/.
+ * The B-library has no dependency on any sibling instance's node_modules.
  *
- * READ-ONLY on the live Drive. Writes ONLY under __Framework/tooling/_validation/.
+ * READ-ONLY on the live Drive. Writes ONLY under tooling/_validation/.
  */
 
 import fs from 'fs';

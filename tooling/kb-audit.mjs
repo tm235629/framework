@@ -25,7 +25,7 @@
  *
  * It REUSES kb-index.mjs's graph build (imported, not re-implemented) — the
  * "auditor aggregates, never duplicates" principle from
- * __Framework/slices/drift-detection/DESIGN.md.
+ * slices/drift-detection/DESIGN.md.
  *
  * Signal families (identical to MOT's computeFindings):
  *   missing_required_frontmatter, invalid_reference_type / legacy_reference_type,
@@ -43,18 +43,17 @@
  *   - cloud-unhydrated / unreadable files → skipped, never reported missing.
  *   - merge-conflict files (excludes.conflict_pattern) never reach the index.
  *
- * READ-ONLY: writes ONLY __Framework/tooling/_validation/drift.kb.json. Touches
+ * READ-ONLY: writes ONLY tooling/_validation/drift.kb.json. Touches
  * nothing in the live Drive.
  *
  * Usage:
- *   node __Framework/tooling/kb-audit.mjs [manifestPath] [--out PATH] [--json]
+ *   node tooling/kb-audit.mjs [manifestPath] [--out PATH] [--json]
  *   default manifestPath = manifest.example.json (shipped demo; copy to manifest.json and edit for your Drive)
- *   default --out        = __Framework/tooling/_validation/drift.kb.json
+ *   default --out        = tooling/_validation/drift.kb.json
  *
- * Frontmatter parsing reuses MOT's gray-matter (via kb-index.mjs's parseFile),
- * so this is apples-to-apples with mot-tools.js. NOTE: a real framework
- * DEPLOYMENT would vendor gray-matter into __Framework/tooling/ so the B-library
- * has no dependency on a sibling instance's node_modules.
+ * Frontmatter parsing reuses kb-index.mjs's parseFile (gray-matter), declared in
+ * this package's package.json and installed standalone via `npm install` in
+ * tooling/. The B-library has no dependency on any sibling instance's node_modules.
  */
 
 import fs from 'fs';
@@ -504,7 +503,7 @@ function main() {
 
   const drift = runAudit(manifestPath);
 
-  // OUTPUT IS WRITE-ONLY UNDER __Framework/tooling/_validation/ — never the live Drive.
+  // OUTPUT IS WRITE-ONLY UNDER tooling/_validation/ — never the live Drive.
   const outPath = out
     ? path.resolve(process.cwd(), out)
     : path.resolve(__dirname, '_validation', 'drift.kb.json');

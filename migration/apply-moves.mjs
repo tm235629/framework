@@ -36,13 +36,13 @@
  *     still fully rollback-able from the partial executed_moves.json.
  *
  * Usage:
- *   node __Framework/migration/apply-moves.mjs <rename_map.json> [manifestPath] [opts]
+ *   node migration/apply-moves.mjs <rename_map.json> [manifestPath] [opts]
  *     (no flag)            DRY-RUN: pre-flight + change-plan, writes nothing
  *     --apply              execute (gate 2). Refused on a protected live Drive (see guard 1)
  *     --rollback FILE      reverse-replay a prior executed_moves.json
  *     --out FILE           executed-log path (default _validation/executed_moves.sample.json)
  *     --json               machine-readable plan/result to stdout
- *   default manifestPath = __Framework/tooling/manifest.json (pass manifest.mot.json explicitly for the reference instance)
+ *   default manifestPath = tooling/manifest.json (pass manifest.mot.json explicitly for the reference instance)
  */
 
 import fs from 'fs';

@@ -51,7 +51,6 @@ node kb-audit.mjs manifest.json --json         # the drift sensor; 0 high-severi
 Everything else — what to put in `manifest.json`, which of the four stand-up paths fits you, and what the two
 human gates are — is in [getting-started.md](getting-started.md).
 
-> **A note on paths.** Commands in this guide are written **relative to the framework repo root** (the folder
-> you get from `git clone`, containing `tooling/`, `bootstrap/`, etc.). Inside the MetaOptics Drive that root
-> is `__Framework/framework/`. Some older runbooks under `bootstrap/` still use an absolute `__Framework/...`
-> prefix — see [troubleshooting.md](troubleshooting.md#paths) if a copied command can't find a file.
+> **A note on paths.** Commands and references throughout the framework are **relative to the repo root** (the
+> folder you get from `git clone`, containing `tooling/`, `bootstrap/`, etc.). Run commands from the repo root
+> and every relative path resolves. (Inside the MetaOptics Drive that root is the `__Framework/framework/` folder.)

@@ -1,19 +1,19 @@
 ---
 description: The operator runbook for standing up a knowledge-OS on a DIFFERENT COMPANY — a full re-derivation of every company-slot from the templates, run as a concrete checklist over SETUP_SEQUENCE's phases. Only the mechanism transfers; the index/people/vocab the mechanism points into are re-derived.
 references:
-  - path: __Framework/bootstrap/SETUP_SEQUENCE.md
+  - path: bootstrap/SETUP_SEQUENCE.md
     type: builds-on
     note: This is the operator instantiation of that phased pipeline — same Phase 0–9 order, NEW-COMPANY branch (run all phases, re-derive every slot).
-  - path: __Framework/ARCHITECTURE.md
+  - path: ARCHITECTURE.md
     type: related
     note: §2 (mechanism vs company-slot) and §11 (federation) are the line this runbook draws between verbatim-reusable and re-derived.
-  - path: __Framework/tooling/config.schema.json
+  - path: tooling/config.schema.json
     type: standard
     note: The manifest schema this runbook fills from scratch (company_profile fully re-authored; person_profile per the first operator).
-  - path: __Framework/templates/README.md
+  - path: templates/README.md
     type: related
     note: The {company-slot} marker library every step here renders against the new company's manifest.
-  - path: __Framework/migration/PLAYBOOK.md
+  - path: migration/PLAYBOOK.md
     type: long-form
     note: Phase 4 (brownfield) executes this gated reversible kit; greenfield skips it.
 status: current
@@ -216,7 +216,7 @@ from day one (inverting MOT's "validator written only after a reorg broke ~170 r
 ## Phase 8 — Learnings loop activation
 
 - [ ] Start the instance's own append-only, topic-scoped Learnings log (separate from
-      `__Framework/Learnings/`). Set a recurring **promotion review** that graduates stable learnings into
+      `Learnings/`). Set a recurring **promotion review** that graduates stable learnings into
       Standards, and surface an **unpromoted-learnings count** as a STATE attention flag (MOT described the
       graduation arrow but never mechanized the cadence).
 

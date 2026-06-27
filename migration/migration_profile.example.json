@@ -1,5 +1,5 @@
 {
-  "_comment": "EXAMPLE fill of company_profile.migration_profile (schema: __Framework/tooling/config.schema.json). Mechanism-only worked instance — NOT wired into manifest.mot.json. Shows the {company-slot} -> value binding for a generic 'document library' migration (the genre the literature run proved). Drop this object under company_profile.migration_profile in a NON-MOT Drive's manifest.json, then run the PLAYBOOK. Every value here is illustrative; swap for the target genre.",
+  "_comment": "EXAMPLE fill of company_profile.migration_profile (schema: tooling/config.schema.json). Mechanism-only worked instance — NOT wired into manifest.mot.json. Shows the {company-slot} -> value binding for a generic 'document library' migration (the genre the literature run proved). Drop this object under company_profile.migration_profile in a NON-MOT Drive's manifest.json, then run the PLAYBOOK. Every value here is illustrative; swap for the target genre.",
 
   "scan_roots": ["{root-relative-folder-being-restructured}"],
   "include_exts": [".pdf"],
