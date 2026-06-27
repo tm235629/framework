@@ -1,0 +1,30 @@
+{
+  "_comment": "EXAMPLE fill of company_profile.migration_profile (schema: __Framework/tooling/config.schema.json). Mechanism-only worked instance — NOT wired into manifest.mot.json. Shows the {company-slot} -> value binding for a generic 'document library' migration (the genre the literature run proved). Drop this object under company_profile.migration_profile in a NON-MOT Drive's manifest.json, then run the PLAYBOOK. Every value here is illustrative; swap for the target genre.",
+
+  "scan_roots": ["{root-relative-folder-being-restructured}"],
+  "include_exts": [".pdf"],
+
+  "near_dup_normalize_strip": "[\\s_\\-.()\\[\\],']+",
+  "near_dup_tail_drop": "(copy|kopie|\\d)$",
+
+  "target_layout": {
+    "primary": "{primary-flat-folder}",
+    "variants": { "{secondary-kind}": "{secondary-folder}" },
+    "superseded": "_superseded",
+    "supplement_suffix": "_SI"
+  },
+
+  "filename_template": {
+    "components": ["year", "venue", "first_author", "last_author", "title"],
+    "sep": "_",
+    "title_words": 8,
+    "title_word_sep": "-",
+    "max_filename_len": 120,
+    "ascii_fold": true
+  },
+
+  "taxonomy_source": "category_rules",
+
+  "metadata_sources": ["bib", "pdf-embedded", "crossref", "first-page", "filename", "unresolved"],
+  "min_confident_source": "crossref"
+}

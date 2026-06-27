@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-os.dev/schema/context-registry.template.json",
+  "title": "Context Registry — confusable workstreams + mandatory difference notes",
+  "description": "TEMPLATE, not data. The GUARDRAIL that stops lookalike workstreams overwriting each other (ARCHITECTURE.md §6 layer 2; the canonical scar is the Bosch/STMicro tester confusion, §7). Mechanism only: every value below is a {company-slot} marker; the filled instance copy is `company_profile.context_registry` in a manifest.json validated against tooling/config.schema.json. Each entry = one confusable workstream: a kebab `<entity>-<workstream>` tag, its owning current-position file, and EVERY related-but-different sibling carrying a MANDATORY difference note.",
+  "type": "array",
+  "x-fills": "company_profile.context_registry",
+  "x-register-before-use": "REGISTER-BEFORE-USE: before writing into a workstream that has any confusable sibling, an agent reads its entry here and the sibling difference notes FIRST. A new workstream that forks from an existing one MUST be registered (new tag + reciprocal difference note on the sibling) before content lands — an unregistered fork is the drift the sensor flags. Define each pairing's difference on BOTH siblings (the relationship is reciprocal).",
+  "items": {
+    "type": "object",
+    "required": ["tag", "what"],
+    "additionalProperties": false,
+    "properties": {
+      "tag": { "type": "string", "description": "{context-tag} — kebab-case <entity>-<workstream>, e.g. '{entity}-{workstream}'. Matches the `context:` frontmatter value content nodes in this workstream carry." },
+      "what": { "type": "string", "description": "{context-what} — one-line description of the workstream (scope, key metric/path that distinguishes it from its siblings)." },
+      "owner": { "type": ["string", "null"], "description": "{owner-path} — forward-slash root-relative path to the current-position / CLAUDE.md file that OWNS this context, or null if not yet created." },
+      "related": {
+        "type": "array",
+        "description": "Sibling contexts that are EASILY CONFUSED with this one. Each carries the load-bearing difference note. Omit/empty only when the workstream has no confusable sibling.",
+        "items": {
+          "type": "object",
+          "required": ["tag", "difference"],
+          "additionalProperties": false,
+          "properties": {
+            "tag": { "type": "string", "description": "{sibling-tag} — the related context's tag (should itself be a registered entry)." },
+            "difference": { "type": "string", "description": "{difference-note} — MANDATORY. WHY this sibling must never bleed into the context: the one fact (beam path, metric, customer-vs-product line, entity) that separates them. The guardrail's whole value lives in this note." }
+          }
+        }
+      }
+    }
+  },
+  "x-examples": {
+    "description": "NOT part of the registry — illustration only. The registry value IS the array; an instance fills the array directly (this `x-examples` key is dropped).",
+    "empty": [],
+    "illustrative_entry": [
+      {
+        "tag": "{entity}-{workstream}",
+        "what": "{context-what}",
+        "owner": "__Projects/{tier-folder}/{entity-folder}/CLAUDE.md",
+        "related": [
+          {
+            "tag": "{sibling-entity}-{workstream}",
+            "difference": "{difference-note} — never port {sibling}'s terms into this context."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+# --- Knowledge-OS Framework .gitignore ---
+# Use when exporting __Framework to a (separate, OUTSIDE-OneDrive) git repo.
+
+# Installed dependencies — run `npm install` in tooling/ per bootstrap/RUN.md
+node_modules/
+**/node_modules/
+
+# Regenerable tool validation scratch / sandbox outputs
+tooling/_validation/
+migration/_validation/
+slices/focus-detector/graph-index.snapshot.json
+slices/focus-detector/focus_signals*.json
+slices/focus-detector/person_profile.detected.json
+**/*.tmp
+**/*.drift-fix.tmp
+
+# Instance-Zero (reference-instance) scratch / gap analysis — keep private, do not ship
+instance-zero/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# ── COMPANY-SPECIFIC SEED ──────────────────────────────────────────────
+# manifest.mot.json + company-seed.json contain MetaOptics-specific data
+# (people names/emails, customer/project names, the context registry with
+# real account names) — the reference instance ("Instance Zero"). They ship
+# ONLY the generic mechanism (templates + tools + docs + the *.example.json
+# synthetic instance), never the filled MOT instance:
+tooling/manifest.mot.json
+tooling/company-seed.json
+GENERALIZATION_AUDIT.md

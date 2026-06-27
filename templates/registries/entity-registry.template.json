@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-os.dev/schema/entity-registry.template.json",
+  "title": "Entity Registry (seed) — people -> companies -> roles",
+  "description": "TEMPLATE, not data. The people->companies->roles single-source-of-truth the original instance never built as a standalone artifact (ARCHITECTURE.md §7) — so it is the FIRST artifact a new instance seeds. Mechanism only: every value below is a {company-slot} marker; the filled instance copy is `company_profile.entity_registry` in a manifest.json validated against tooling/config.schema.json. PEOPLE are MANDATORY (the registry's irreducible seed); COMPANIES are DERIVABLE from __Projects/ folder names, so the `companies` block is OPTIONAL — list a company only to record a role/alias a folder name alone can't carry.",
+  "type": "object",
+  "required": ["people"],
+  "additionalProperties": false,
+  "x-fills": "company_profile.entity_registry",
+  "x-seed-order": "FIRST — seed before any content load; an unresolved person/company is the root cause of the recurring entity tangles the framework inverts.",
+  "properties": {
+    "people": {
+      "type": "array",
+      "description": "MANDATORY seed. One row per known person (own-company staff + recurring external contacts). Fills company_profile.entity_registry.people. The entity-resolver C module resolves names/emails seen in email + meetings against this list; the focus-detector EXTENDS it per person via person_profile.focus.extra_entities (never overwrites it).",
+      "items": {
+        "type": "object",
+        "required": ["name", "email", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "description": "{person-name} — display name." },
+          "email": { "type": "string", "description": "{person-email} — primary address; the key the email adapter resolves senders against." },
+          "role": { "type": "string", "description": "{person-role} — one-line role/function." },
+          "company": { "type": "string", "description": "{company-slot} — employing org. OPTIONAL: own-company staff omit it (use internal:true); fill for external contacts to bind them to a company in `companies`." },
+          "internal": { "type": "boolean", "description": "True for own-company staff (matches company_profile.company.domain). Drives internal-vs-external sender classification." }
+        }
+      }
+    },
+    "companies": {
+      "type": "array",
+      "description": "OPTIONAL — companies are DERIVABLE from __Projects/ folder names, so seed a row here ONLY to record something the folder name can't: a role label, an alias, or the canonical Overview path. Absent rows are still recognised from their folder. Has no manifest counterpart of its own; the resolver folds these into the project graph.",
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "description": "{company-slot} — canonical display name, matching the __Projects/ folder (minus any date prefix)." },
+          "role": { "type": "string", "description": "{company-role} — relationship/function, e.g. a supply-chain role or 'customer'/'research partner'." },
+          "aliases": { "type": "array", "items": { "type": "string" }, "description": "Other names/spellings the resolver should fold into this entity." },
+          "overview": { "type": "string", "description": "{overview-path} — forward-slash root-relative path to the company's Overview.md." }
+        }
+      }
+    },
+    "_examples": {
+      "description": "NOT part of the registry — illustration only. An instance DELETES this key and fills `people` (and optionally `companies`) for real.",
+      "empty": {
+        "people": [],
+        "companies": []
+      },
+      "illustrative_row": {
+        "people": [
+          {
+            "name": "{person-name}",
+            "email": "{person-email}",
+            "role": "{person-role}",
+            "internal": true
+          }
+        ],
+        "companies": [
+          {
+            "name": "{company-slot}",
+            "role": "{company-role}",
+            "aliases": ["{company-alias}"],
+            "overview": "__Projects/{tier-folder}/{company-folder}/Overview.md"
+          }
+        ]
+      }
+    }
+  }
+}

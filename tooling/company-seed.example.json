@@ -1,0 +1,159 @@
+{
+  "manifest_version": "0.1",
+  "company_profile": {
+    "company": {
+      "name": "Acme Optics",
+      "domain": "acme.example"
+    },
+    "taxonomy": {
+      "projects_root": "Projects",
+      "project_tiers": [
+        { "folder": "Customers", "purpose": "Customer engagements; one folder per account.", "naming_convention": "Projects/Customers/CompanyName/", "entity_card": true },
+        { "folder": "Suppliers", "purpose": "Equipment/component vendors and internal R&D.", "naming_convention": "Projects/Suppliers/CompanyName/", "entity_card": true },
+        { "folder": "Records", "purpose": "Cross-project reference docs; not entity cards.", "entity_card": false }
+      ],
+      "category_rules": [
+        { "match": "(^|/)_superseded(/|$)|(^|/)legacy(/|$)", "match_kind": "regex", "category": "superseded" },
+        { "match": "AGENT.md", "match_kind": "exact", "category": "hub" },
+        { "match": "Customers", "match_kind": "second_segment_of", "scope": "Projects", "category": "customer" },
+        { "match": "Suppliers", "match_kind": "second_segment_of", "scope": "Projects", "category": "supplier" },
+        { "match": "Records", "match_kind": "second_segment_of", "scope": "Projects", "category": "reference" },
+        { "match": "Projects", "match_kind": "first_segment", "category": "project" }
+      ],
+      "subfolder_convention": ["Quotes", "Specs", "Meetings", "Images"],
+      "non_card_subfolders": ["Development", "Analysis", "Testing"]
+    },
+    "vocab": {
+      "tier_scale": {
+        "min": 1,
+        "max": 3,
+        "labels": {
+          "1": "Strategic account",
+          "2": "Active partner",
+          "3": "Emerging lead"
+        }
+      },
+      "phase_enum": ["engaged", "acquisition", "dormant", "internal", "archived"],
+      "verticals": ["Lenses", "Coatings", "Modules"],
+      "edge_types": {
+        "valid": ["customer", "supplies", "related", "source", "describes", "superseded_by", "supersedes", "references"],
+        "legacy": ["reference", "relates_to"],
+        "provenance": ["source"]
+      },
+      "node_kinds": ["topic", "product-parent"],
+      "status_enum": ["current", "exploratory", "superseded", "legacy", "draft"],
+      "supply_chain_roles": ["customer", "supplier", "integrator", "research-partner", "none"],
+      "document_kinds": [
+        { "key": "testing_analysis", "label": "test/measurement analysis", "path_patterns": ["/Testing/|/Analysis/"] },
+        { "key": "meeting_records", "label": "meeting records", "path_patterns": ["/Meetings/", "_meeting_summary\\.md$"] },
+        { "key": "overviews", "label": "project Overviews", "path_patterns": ["/Overview\\.md$"] },
+        { "key": "weekly_sync", "label": "weekly operations sync", "path_patterns": ["Operations Sync"] },
+        { "key": "standards", "label": "standards / conventions", "path_patterns": ["/Standards/"] },
+        { "key": "literature", "label": "research literature", "path_patterns": ["^Library/"] }
+      ]
+    },
+    "frontmatter_schema": {
+      "required_fields": ["description", "references"],
+      "optional_fields": ["tier", "phase", "vertical", "node_kind", "supply_chain_role", "status", "context", "tags"],
+      "tldr_keys": {
+        "canonical": ["Status", "Next milestone", "Open blockers", "Last activity"],
+        "date_anchored_key": "Last activity"
+      },
+      "avoid_read_marker": {
+        "flag_field": "agent_read",
+        "flag_value": "avoid",
+        "extractor_field": "agent_read_extractor"
+      }
+    },
+    "context_registry": [
+      {
+        "tag": "widget-a-program",
+        "what": "Widget-A optical module test program.",
+        "owner": "Projects/Customers/Northstar/Overview.md",
+        "related": [
+          { "tag": "widget-b-program", "difference": "Sibling program on a different wavelength; never port specs between them." }
+        ]
+      },
+      {
+        "tag": "widget-b-program",
+        "what": "Widget-B optical module test program.",
+        "owner": "Projects/Customers/Brightway/Overview.md",
+        "related": [
+          { "tag": "widget-a-program", "difference": "Sibling program; keep test parameters separate." }
+        ]
+      }
+    ],
+    "entity_registry": {
+      "people": [
+        { "name": "Dana Lin", "email": "dana.lin@acme.example", "role": "Head of Systems", "internal": true },
+        { "name": "Rafael Ortiz", "email": "rafael.ortiz@acme.example", "role": "Finance lead", "internal": true }
+      ]
+    },
+    "excludes": {
+      "dirs": ["node_modules", ".git", "__pycache__", "dist", "build", "bin", "obj"],
+      "skip_names": ["_catalog.md", "*-HOST.md"],
+      "conflict_pattern": "-ACME\\d+\\.md$",
+      "exclude_path_patterns": ["raw/Junk", "*_transcript"]
+    },
+    "catalog_profile": {
+      "skip_exts": [".json", ".txt", ".log", ".bin", ".exe", ".tmp", ".bak"],
+      "ext_classification": {
+        ".md":   { "type": "markdown",     "type_label": "Markdown" },
+        ".pdf":  { "type": "document",     "type_label": "PDF" },
+        ".docx": { "type": "document",     "type_label": "Word" },
+        ".xlsx": { "type": "spreadsheet",  "type_label": "Excel" },
+        ".pptx": { "type": "presentation", "type_label": "PowerPoint" },
+        ".png":  { "type": "image",        "type_label": "PNG" },
+        ".step": { "type": "cad",          "type_label": "STEP" }
+      },
+      "default_type": { "type": "document", "type_label": "File" },
+      "skip_exact_names": [".DS_Store", "Thumbs.db", "desktop.ini"],
+      "catalog_filename": "_catalog.md",
+      "walker_version": 1,
+      "max_depth": 8
+    },
+    "raw_archive_roots": ["raw"],
+    "scan_roots": [".", "Projects", "Records", "Library"],
+    "brand": {
+      "accent": "#2f6fae",
+      "accent_variants": {
+        "hover": "#3f7fbe",
+        "pressed": "#1f5f9e",
+        "dim": "#1a4570"
+      },
+      "fonts": ["Inter", "Arial", "sans-serif"],
+      "pdf_footer": "Acme Optics — Operations Sync {{week_iso}}    {{pageNumber}} / {{totalPages}}",
+      "web_qa_target": "https://acme.example"
+    },
+    "input_adapters": {
+      "email": {
+        "kind": "mail_api",
+        "location": "raw/mail",
+        "body_filename_grammar": "YYYYMMDD_HHMMSS__Subject.ext",
+        "attachment_filename_grammar": "YYYYMMDD_HHMMSS_AttachmentName.ext",
+        "body_formats": [".txt", ".json"],
+        "junk_patterns": ["image0*.png", "logo-*.png"]
+      },
+      "transcription": {
+        "backend": "external transcription pipeline (transcripts must pre-exist)",
+        "media_tool": "ffmpeg",
+        "recordings_location": "raw/recordings",
+        "summary_location": "Records/Meetings"
+      }
+    },
+    "cadence": {
+      "sync_period": "weekly",
+      "publish_day": "Monday",
+      "model": "rolling-prep: prior week frozen, next-week draft accumulates",
+      "pdf_render_schedule": "Monday 08:00"
+    },
+    "storage_profile": {
+      "kind": "local",
+      "platform": "linux",
+      "root": "/srv/acme-drive",
+      "protected_root_markers": [],
+      "churn_guards": false,
+      "lock_guards": false
+    }
+  }
+}

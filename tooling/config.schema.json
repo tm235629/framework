@@ -1,0 +1,543 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://knowledge-os.dev/schema/config.schema.json",
+  "title": "Knowledge-OS Manifest",
+  "description": "The C->B contract: a single declarative description of an agent-navigable Drive that fully parameterizes every deterministic (B) tool. Layered into a company_profile (invariants shared across teammates, seeded once) and a person_profile (focus-specific to one person, partly populated by the focus-detector C module). Grounded in the MetaOptics OneDrive instance.",
+  "type": "object",
+  "required": ["manifest_version", "company_profile", "person_profile"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "description": "Schema version of this manifest document, e.g. '0.1'."
+    },
+    "company_profile": {
+      "type": "object",
+      "description": "Company-INVARIANT slots: shared across every teammate's instance and seeded from one company profile (never a live central store). Re-derived only when standing up a different company.",
+      "required": ["company", "taxonomy", "vocab", "frontmatter_schema", "excludes", "catalog_profile", "raw_archive_roots", "brand", "storage_profile", "cadence"],
+      "additionalProperties": false,
+      "properties": {
+        "company": {
+          "type": "object",
+          "description": "Company identity.",
+          "required": ["name"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "description": "Display name, e.g. 'MetaOptics'." },
+            "domain": { "type": "string", "description": "Primary email/web domain, e.g. 'metaoptics.sg'. Used to recognise internal vs external email senders." }
+          }
+        },
+        "taxonomy": {
+          "type": "object",
+          "description": "Top-level folder tiers + the deriveCategory rule. Parameterizes the graph indexer's category derivation and the placement-rule engine.",
+          "required": ["projects_root", "project_tiers", "category_rules"],
+          "additionalProperties": false,
+          "properties": {
+            "projects_root": {
+              "type": "string",
+              "description": "The single top-level folder that holds the project/entity tiers (project_tiers live one segment under it). The reference instance (MetaOptics) uses '__Projects'. Read by the entity-registry generator (kb-entities) and the focus detector (kb-focus) to build their company-deriving regexes instead of hardcoding the hub name — a Drive whose hub is named differently (e.g. 'Projects') still derives companies."
+            },
+            "project_tiers": {
+              "type": "array",
+              "description": "The top-level __Projects/ tiers (folder + purpose), from README_Folder_Guidelines.md 'Tier definitions'.",
+              "items": {
+                "type": "object",
+                "required": ["folder", "purpose"],
+                "additionalProperties": false,
+                "properties": {
+                  "folder": { "type": "string", "description": "Folder name under __Projects/, e.g. 'Aquisition'." },
+                  "purpose": { "type": "string", "description": "One-line role of the tier." },
+                  "naming_convention": { "type": "string", "description": "Optional folder-naming rule, e.g. the YYYYMMDD date-prefix scheme for Aquisition." },
+                  "entity_card": { "type": "boolean", "description": "Whether folders in this tier are entity/relationship cards the card extractor (kb-extract) should surface as project tiles (true for relationship tiers like Aquisition/Internal/Collaboration/Archive), vs record-only tiers whose contents are documents not entities (false for Sales/Documentation). Lets kb-extract decide card-bearing tiers from the manifest instead of a hardcoded tier list." }
+                }
+              }
+            },
+            "category_rules": {
+              "type": "array",
+              "description": "Ordered first-match rules mapping a root-relative path to a graph category (mirrors mot-tools.js deriveCategory). Lifecycle folders (_superseded/legacy/Archive) match before location.",
+              "items": {
+                "type": "object",
+                "required": ["match", "category"],
+                "additionalProperties": false,
+                "properties": {
+                  "match": { "type": "string", "description": "A regex (path-segment) or exact path the rule tests against the root-relative path." },
+                  "match_kind": { "type": "string", "enum": ["regex", "exact", "first_segment", "second_segment_of"], "description": "How `match` is interpreted." },
+                  "scope": { "type": "string", "description": "For second_segment_of rules: the first segment this rule applies under (e.g. '__Projects')." },
+                  "category": { "type": "string", "description": "Resulting category label, e.g. 'aquisition', 'internal', 'superseded', 'hub'." }
+                }
+              }
+            },
+            "subfolder_convention": {
+              "type": "array",
+              "description": "Canonical purpose-named subfolder names attachments port into (README Rule 4) — the ingest/port skill's allowed destinations. No raw landing zone.",
+              "items": { "type": "string" }
+            },
+            "non_card_subfolders": {
+              "type": "array",
+              "description": "Deep-technical working subfolder names that hold engineering/working documents, NOT entity cards — even inside an entity_card:true tier. The card extractor (kb-extract) does NOT treat an Overview/CLAUDE.md under one of these as a separate project tile (e.g. Development, Analysis, Testing, 'Measurement setup'). Complements project_tiers[].entity_card: the tier flag says which tiers card at all; this list carves card-free working zones out of those tiers.",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "vocab": {
+          "type": "object",
+          "description": "Controlled vocabularies the B-tools and skills enforce. The single source of truth for tier scale, phase enum, verticals, edge-types, node_kinds, status, and supply-chain roles.",
+          "required": ["tier_scale", "phase_enum", "verticals", "edge_types", "node_kinds", "status_enum"],
+          "additionalProperties": false,
+          "properties": {
+            "tier_scale": {
+              "type": "object",
+              "description": "Strategic-importance scale (importance, independent of activity).",
+              "required": ["min", "max", "labels"],
+              "additionalProperties": false,
+              "properties": {
+                "min": { "type": "integer", "description": "Most important tier number (e.g. 1)." },
+                "max": { "type": "integer", "description": "Least important tier number (e.g. 4)." },
+                "labels": { "type": "object", "description": "Map of tier number -> short label.", "additionalProperties": { "type": "string" } }
+              }
+            },
+            "phase_enum": {
+              "type": "array",
+              "description": "Engagement-state enum for project Overviews (frontmatter `phase`).",
+              "items": { "type": "string" }
+            },
+            "verticals": {
+              "type": "array",
+              "description": "Product lanes (frontmatter `vertical`; also the Sync verticals view and the __MOT folder tree top level).",
+              "items": { "type": "string" }
+            },
+            "edge_types": {
+              "type": "object",
+              "description": "Controlled `references[].type` vocabulary (Reference_Graph_Schema §3). Drives the ref validator's invalid/legacy classification.",
+              "required": ["valid", "legacy"],
+              "additionalProperties": false,
+              "properties": {
+                "valid": { "type": "array", "items": { "type": "string" }, "description": "Current controlled edge types." },
+                "legacy": { "type": "array", "items": { "type": "string" }, "description": "Discouraged synonyms still present in old files; reported as low-severity, not invalid." },
+                "provenance": { "type": "array", "items": { "type": "string" }, "description": "Document-flow types whose dead target under the temp archive is provenance, not drift." }
+              }
+            },
+            "node_kinds": {
+              "type": "array",
+              "description": "Allowed `node_kind` values (Reference_Graph_Schema §6/§6a/§6b). Absent = ordinary leaf.",
+              "items": { "type": "string" }
+            },
+            "status_enum": {
+              "type": "array",
+              "description": "Lifecycle `status` vocabulary (Status_Lifecycle.md §1).",
+              "items": { "type": "string" }
+            },
+            "supply_chain_roles": {
+              "type": "array",
+              "description": "Observed values of `supply_chain_role`. NOTE: currently UNCONTROLLED in MOT (free-form). Listed so a B-tool can normalise; flag drift against this set. Must cover the FULL live spread, including the off-enum live values surfaced by the audit (`none`, `software_platform`, `research-partner`), not just the canonical roles. KNOWN TODO: this set still contains synonym pairs that should be de-duped to one canonical each (`researcher`/`research`, `supplier`/`vendor`) — left in until a normalisation map is added so a B-tool can recognise every live value without false-flagging it as drift.",
+              "items": { "type": "string" }
+            },
+            "document_kinds": {
+              "type": "array",
+              "description": "The document-genre vocabulary the focus detector (kb-focus) uses to classify a node by its path. Generalizes kb-focus's formerly-hardcoded docKindDefs (Testing/analysis, Meeting_Records, the weekly sync filename, Standards, __Literature) into manifest-declared kinds so a different company's genres are visible. Each entry pairs a stable key + human label with one or more regex path-patterns; a node is counted under a kind if ANY pattern matches its root-relative id. `literature` is special-cased by key (excluded from focus genres) so name it `literature` to preserve that behaviour.",
+              "items": {
+                "type": "object",
+                "required": ["key", "label", "path_patterns"],
+                "additionalProperties": false,
+                "properties": {
+                  "key": { "type": "string", "description": "Stable machine key, e.g. 'meeting_records'. Used for counts and the literature special-case." },
+                  "label": { "type": "string", "description": "Human label shown in focus output, e.g. 'meeting records'." },
+                  "path_patterns": {
+                    "type": "array",
+                    "description": "Regex strings tested against a node's root-relative id (forward-slash). A node matches the kind if ANY pattern matches.",
+                    "items": { "type": "string" },
+                    "minItems": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "frontmatter_schema": {
+          "type": "object",
+          "description": "Node-record field contract: which frontmatter keys are required/optional on a content node, plus the TL;DR-head key set the card extractor parses.",
+          "required": ["required_fields", "optional_fields", "tldr_keys"],
+          "additionalProperties": false,
+          "properties": {
+            "required_fields": {
+              "type": "array",
+              "description": "Minimum keys every graph-registered .md must carry (root CLAUDE.md 'Graph registration').",
+              "items": { "type": "string" }
+            },
+            "optional_fields": {
+              "type": "array",
+              "description": "Recognised optional node fields the indexer/extractor read (tier, phase, vertical, status, context, valid_as_of, node_kind, supply_chain_role, agent_read, etc.).",
+              "items": { "type": "string" }
+            },
+            "tldr_keys": {
+              "type": "object",
+              "description": "The `## TL;DR` bullet keys (Quality_Standards.md 'TL;DR block'). NOTE: the extractor (kb-extract / extractProjects) parses ALL bold-key bullets generically (every `**Key:** value` line, ~70 keys in the wild), so this is NOT an allow-list — `canonical` is only the REQUIRED/validated subset plus the freshness anchor. A bullet key absent from `canonical` is still extracted; it is just not required or freshness-anchored.",
+              "required": ["canonical"],
+              "additionalProperties": false,
+              "properties": {
+                "canonical": { "type": "array", "items": { "type": "string" }, "description": "The REQUIRED/validated bullet keys, in order. The minimum subset every Overview TL;DR must carry — and the keys card slots are guaranteed. NOT an allow-list: the extractor still reads any other bold-key bullet generically." },
+                "date_anchored_key": { "type": "string", "description": "Which TL;DR key must lead with an ISO date for the freshness dot." },
+                "date_anchored_synonyms": { "type": "array", "items": { "type": "string" }, "description": "Alternate bold-key labels that ALSO carry the date-anchored freshness value (treated as equivalent to `date_anchored_key` for the freshness dot), e.g. an Overview that leads with 'Last engagement' instead of the canonical key. Lets the extractor anchor freshness without forcing every Overview onto one label." }
+              }
+            },
+            "avoid_read_marker": {
+              "type": "object",
+              "description": "The frontmatter convention that flags large files agents should not full-read.",
+              "additionalProperties": false,
+              "properties": {
+                "flag_field": { "type": "string", "description": "Frontmatter key, e.g. 'agent_read'." },
+                "flag_value": { "type": "string", "description": "Value meaning avoid, e.g. 'avoid'." },
+                "extractor_field": { "type": "string", "description": "Frontmatter key naming the extractor to use instead, e.g. 'agent_read_extractor'." }
+              }
+            }
+          }
+        },
+        "context_registry": {
+          "type": "array",
+          "description": "Confusable-workstream registry (Contexts.md): each context names its owning current-position file and its related-but-different siblings with a mandatory difference note. The guardrail that stops lookalike workstreams overwriting each other. Company-invariant because the confusables are about the company's projects.",
+          "items": {
+            "type": "object",
+            "required": ["tag", "what"],
+            "additionalProperties": false,
+            "properties": {
+              "tag": { "type": "string", "description": "kebab-case <entity>-<workstream> context tag." },
+              "what": { "type": "string", "description": "One-line description of the workstream." },
+              "owner": { "type": ["string", "null"], "description": "Root-relative path to the current-position file. null is a DELIBERATE state for a sync-owned / not-yet-active context (no single current-position home) — tooling treats it as intentional, not a broken lookup." },
+              "owner_note": { "type": "string", "description": "For owner:null contexts, where the consolidated state actually lives (e.g. 'weekly sync OPERATIONS section')." },
+              "related": {
+                "type": "array",
+                "description": "Sibling contexts and HOW they differ (the load-bearing note).",
+                "items": {
+                  "type": "object",
+                  "required": ["tag", "difference"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "tag": { "type": "string" },
+                    "difference": { "type": "string", "description": "Why this sibling must never bleed into the context." }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "entity_registry": {
+          "type": "object",
+          "description": "Seed people->roles registry (root CLAUDE.md Key People). The single-source-of-truth MOT never built as a standalone artifact; seeded here. Companies are derivable from __Projects/ folders, so only the people seed is mandatory.",
+          "required": ["people"],
+          "additionalProperties": false,
+          "properties": {
+            "people": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "email", "role"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "role": { "type": "string" },
+                  "internal": { "type": "boolean", "description": "True for own-company staff." }
+                }
+              }
+            }
+          }
+        },
+        "excludes": {
+          "type": "object",
+          "description": "Skip-lists for the walker/indexer. THE SINGLE SOURCE: excludes.json `dirs`. Flagged here because MOT currently hand-mirrors this list across server.js, mot-tools.js (both read the JSON) AND the C++ walker SKIP_DIRS (cannot read JSON) — a drift risk. The manifest should be the one source all tools read.",
+          "required": ["dirs"],
+          "additionalProperties": false,
+          "properties": {
+            "dirs": { "type": "array", "items": { "type": "string" }, "description": "Directory basenames never entered into the graph/tree/catalogs." },
+            "skip_exts": { "type": "array", "items": { "type": "string" }, "description": "WALKER/SERVER-SCOPED. File extensions ignored by the catalog walker + dashboard server. The graph indexer (kb-index / mot-tools.js graph) does NOT apply these — it indexes by frontmatter, not extension. Lives in the C++ walker today." },
+            "skip_names": { "type": "array", "items": { "type": "string" }, "description": "WALKER/SERVER-SCOPED. Exact/glob filenames the catalog walker + dashboard server skip (e.g. _catalog.md folder listings, machine-suffixed *-HOST.md). The graph INDEXER does NOT consult this list (mot-tools.js buildGraphIndex indexes _catalog.md); the indexer's own conflict-file exclusion is `conflict_pattern`. GAP-1 resolution: one list cannot parameterize two tools with different rules, so name lists are tool-scoped — skip_names is walker/server, conflict_pattern is indexer." },
+            "conflict_pattern": { "type": "string", "description": "INDEXER-SCOPED. A regex matched against a node's basename (or root-relative path); files that match are the only names the graph indexer (kb-index / mot-tools.js buildGraphIndex) excludes — i.e. machine-suffixed merge-conflict files like `-METAOPTICS<n>.md`. Distinct from skip_names (which is walker/server-scoped and the indexer ignores), so the manifest can say the walker skips _catalog.md while the indexer still indexes it." },
+            "exclude_path_patterns": { "type": "array", "items": { "type": "string" }, "description": "Raw-artifact subtree patterns excluded from the graph (e.g. transcript/frames folders, __temp/Junk)." }
+          }
+        },
+        "catalog_profile": {
+          "type": "object",
+          "description": "WALKER-SCOPED file classification + filtering for the per-folder catalog generator (kb-walk, the generalized mot-walker). Closes the SSOT risk that these constants lived ONLY in the C++ walker (`mot-walker.cpp` SKIP_EXTS / EXT_MAP / SKIP_NAMES) and had no manifest home — so kb-walk had to fall back to a hardcoded BUILTIN mirror. With this section present, kb-walk is a 100% pure function of the manifest (no BUILTIN fallback). Distinct from `excludes`: `excludes.dirs` prunes whole DIRECTORIES from every tool; this section governs how the WALKER lists/classifies the FILES inside a folder it does enter.",
+          "required": ["skip_exts", "ext_classification", "skip_exact_names"],
+          "additionalProperties": false,
+          "properties": {
+            "skip_exts": {
+              "type": "array",
+              "description": "Lowercased file extensions (leading dot) the catalog walker omits from a folder's `_catalog.md` — data/binary/system junk a catalog of 'real' content shouldn't list. Checked BEFORE classification (an ext here is dropped even if ext_classification also maps it). Source of record: mot-walker.cpp SKIP_EXTS.",
+              "items": { "type": "string" }
+            },
+            "ext_classification": {
+              "type": "object",
+              "description": "Extension -> file-type classifier the walker uses to label a listed file (machine `type` + human `type_label`). Drives the catalog's per-file Type column and the folder description's type-label summary. Source of record: mot-walker.cpp EXT_MAP. An extension absent from this map falls back to `default_type`.",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["type", "type_label"],
+                "additionalProperties": false,
+                "properties": {
+                  "type": { "type": "string", "description": "Machine type key, e.g. 'document', 'markdown', 'spreadsheet', 'image', 'cad'." },
+                  "type_label": { "type": "string", "description": "Human label shown in the catalog, e.g. 'PDF', 'Word', 'Excel'." }
+                }
+              }
+            },
+            "default_type": {
+              "type": "object",
+              "description": "Fallback classification for an extension not in ext_classification (mot-walker.cpp returns {'document','File'}).",
+              "additionalProperties": false,
+              "properties": {
+                "type": { "type": "string" },
+                "type_label": { "type": "string" }
+              }
+            },
+            "skip_exact_names": {
+              "type": "array",
+              "description": "Exact filenames (OS/system junk with no/uncommon extension) the catalog walker omits — e.g. .DS_Store, Thumbs.db, desktop.ini. Distinct from excludes.skip_names (walker name-GLOBS like `_catalog.md`/`*-HOST.md`): this is the exact-match OS-junk set. Source of record: mot-walker.cpp SKIP_NAMES.",
+              "items": { "type": "string" }
+            },
+            "catalog_filename": {
+              "type": "string",
+              "description": "The catalog filename the walker emits and skips-as-self (mot-walker.cpp CATALOG_FILENAME). Default '_catalog.md'."
+            },
+            "walker_version": {
+              "type": "integer",
+              "description": "The `walker_version` stamped into generated catalog frontmatter (mot-walker.cpp emits 1). Bump on a catalog-format change."
+            },
+            "max_depth": {
+              "type": "integer",
+              "description": "Maximum recursion depth the walker descends (the dashboard server caps at 8)."
+            }
+          }
+        },
+        "raw_archive_roots": {
+          "type": "array",
+          "description": "Top-level roots holding the RAW source archive (un-curated inbound material: the flat email/recordings dump) whose own derived `.md` summaries are the curated record. The provenance auditor (kb-audit) reads this EXPLICITLY to decide that a dead reference whose target lives under one of these roots is provenance (a document-flow source link to material that was archived), not drift — instead of deriving the temp root implicitly from input_adapters. Usually ['__temp'].",
+          "items": { "type": "string" }
+        },
+        "scan_roots": {
+          "type": "array",
+          "description": "Top-level roots the frontmatter indexer walks (mot-tools.js SCAN_ROOTS). The server variant walks the whole Drive from root; this is the lean agent-index subset.",
+          "items": { "type": "string" }
+        },
+        "migration_profile": {
+          "type": "object",
+          "description": "MIGRATION-KIT-SCOPED config: parameterizes the reversible database-first migration tools (migration/inventory.mjs, plan-renames.mjs, apply-moves.mjs). OPTIONAL — a Drive that is already organized never needs it; the tools fall back to documented defaults + the existing taxonomy/catalog_profile sections when it is absent. Generalizes MOT's one-off __Literature/_migration constants (the PDF inventory scope, the YYYY_Venue_Authors_Title filename grammar, the Papers/Patents/_superseded target layout) into manifest slots so the SAME tools migrate a different Drive by swapping values here.",
+          "additionalProperties": false,
+          "properties": {
+            "scan_roots": {
+              "type": "array",
+              "description": "Roots the migration INVENTORY walks (often a single messy folder being restructured, e.g. ['__Literature']). Falls back to company_profile.scan_roots. Distinct from the indexer's scan_roots because a migration usually targets ONE subtree, not the whole agent index.",
+              "items": { "type": "string" }
+            },
+            "include_exts": {
+              "type": "array",
+              "description": "If set, the inventory lists ONLY these lowercased extensions (the literature kit inventoried only '.pdf'). Absent ⇒ every file (minus catalog_profile.skip_exts / skip_exact_names). The {include-exts} slot.",
+              "items": { "type": "string" }
+            },
+            "near_dup_normalize_strip": {
+              "type": "string",
+              "description": "Regex of characters stripped when normalizing a filename for same-name/near-duplicate grouping (default whitespace + separators + brackets/quotes). Mirrors inventory.py norm_name. The {near-dup-normalize} slot."
+            },
+            "near_dup_tail_drop": {
+              "type": "string",
+              "description": "Regex of trailing tokens dropped after normalize (e.g. 'copy', 'kopie', a trailing digit) so 'paper(1)' groups with 'paper'. Mirrors inventory.py."
+            },
+            "target_layout": {
+              "type": "object",
+              "description": "Where the plan routes survivors, kind-variants, surplus duplicates, and supplements. The {target-layout} slot family. Generalizes the literature kit's Papers/ + Patents/ + _superseded/ + _SI scheme.",
+              "additionalProperties": false,
+              "properties": {
+                "primary": { "type": "string", "description": "Flat survivor folder for the default kind, e.g. 'Papers'. {primary-folder}" },
+                "variants": { "type": "object", "description": "Map of file kind -> its own target folder (e.g. {\"patent\":\"Patents\"}). {variant-folders}", "additionalProperties": { "type": "string" } },
+                "superseded": { "type": "string", "description": "Sink folder for surplus duplicate copies (NEVER deleted; old relative path mirrored under it). Default '_superseded'. {superseded-sink}" },
+                "supplement_suffix": { "type": "string", "description": "Suffix appended to a main file's basename for a supplement that gets NO own graph node (e.g. '_SI'). {supplement-suffix}" }
+              }
+            },
+            "filename_template": {
+              "type": "object",
+              "description": "The rename grammar the planner applies per survivor. The {filename-template} slot. Generalizes the literature kit's 'YYYY_JournalAbbrev_FirstAuthor_LastAuthor_Short-Title' rule into ordered, manifest-declared components.",
+              "additionalProperties": false,
+              "properties": {
+                "components": { "type": "array", "items": { "type": "string" }, "description": "Metadata field names joined IN ORDER to form the basename (e.g. ['year','venue','first_author','last_author','title']). A field absent from a file's resolved metadata is skipped." },
+                "sep": { "type": "string", "description": "Join separator between components (default '_')." },
+                "title_words": { "type": "integer", "description": "Max words kept from the title component." },
+                "title_word_sep": { "type": "string", "description": "Separator inside the slugged title (default '-')." },
+                "max_filename_len": { "type": "integer", "description": "Hard cap on the basename length (literature kit used 120 to stay under the OneDrive path limit)." },
+                "ascii_fold": { "type": "boolean", "description": "Fold diacritics to ASCII (é→e) so filenames are portable." }
+              }
+            },
+            "taxonomy_source": {
+              "type": "string",
+              "description": "Which manifest taxonomy section labels a file's `category` when resolved metadata lacks one. Default 'category_rules' (reuse company_profile.taxonomy.category_rules path→category mapping). The {taxonomy-source} slot."
+            },
+            "metadata_sources": {
+              "type": "array",
+              "description": "Ordered confidence ladder of metadata provenance, strongest first (e.g. ['bib','pdf-embedded','crossref','first-page','filename','unresolved']). A file resolved from a source ranked weaker than `min_confident_source` is flagged needs_review so the C rung confirms it before gate 2. The {metadata-ladder} slot.",
+              "items": { "type": "string" }
+            },
+            "min_confident_source": {
+              "type": "string",
+              "description": "The weakest metadata source still treated as confident (no review flag). Must appear in metadata_sources. Default 'crossref'."
+            }
+          }
+        },
+        "brand": {
+          "type": "object",
+          "description": "Visual + output identity for the dashboard theme and the PDF renderer.",
+          "required": ["accent"],
+          "additionalProperties": false,
+          "properties": {
+            "accent": { "type": "string", "description": "Primary brand accent hex (--mot-red)." },
+            "accent_variants": { "type": "object", "description": "Hover/pressed/dim variants of the accent.", "additionalProperties": { "type": "string" } },
+            "fonts": { "type": "array", "items": { "type": "string" }, "description": "Font stack used in the PDF print CSS." },
+            "pdf_footer": { "type": "string", "description": "PDF footer template/text (sync-report-pdf.js), with placeholders for company + date." },
+            "web_qa_target": { "type": "string", "description": "Public site URL the web-qa skill drives." }
+          }
+        },
+        "input_adapters": {
+          "type": "object",
+          "description": "Source-grammar adapters for ingest skills: email archive filename grammar + junk patterns, and the meeting-transcription backend.",
+          "additionalProperties": false,
+          "properties": {
+            "email": {
+              "type": "object",
+              "description": "Email archive adapter (Email_Archive_Format.md). MOT uses a FLAT Outlook export; the framework prefers a proper mail API but supports flat-export as a fallback.",
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "type": "string", "enum": ["outlook_flat_export", "mail_api"], "description": "Adapter shape." },
+                "location": { "type": "string", "description": "Root-relative archive folder." },
+                "body_filename_grammar": { "type": "string", "description": "Email-body filename pattern (double-underscore before subject)." },
+                "attachment_filename_grammar": { "type": "string", "description": "Attachment filename pattern (single-underscore)." },
+                "body_formats": { "type": "array", "items": { "type": "string" }, "description": "Body file extensions (.txt, .JSON)." },
+                "junk_patterns": { "type": "array", "items": { "type": "string" }, "description": "Filename globs that are signature logos / Outlook artifacts (cleanup targets)." }
+              }
+            },
+            "transcription": {
+              "type": "object",
+              "description": "Meeting-recording transcription backend (video-process.md).",
+              "additionalProperties": false,
+              "properties": {
+                "backend": { "type": "string", "description": "Named pipeline/tool that produces transcripts (e.g. the external 'MOTorga' pipeline / ffmpeg pre-step). MOT has no in-repo /transcribe skill." },
+                "media_tool": { "type": "string", "description": "Frame/audio extraction tool, e.g. 'ffmpeg'." },
+                "recordings_location": { "type": "string", "description": "Root-relative raw-recordings folder." },
+                "summary_location": { "type": "string", "description": "Where finished meeting summaries land." }
+              }
+            }
+          }
+        },
+        "cadence": {
+          "type": "object",
+          "description": "Sync period + the freeze/draft boundary the ops-sync skill runs on.",
+          "required": ["sync_period"],
+          "additionalProperties": false,
+          "properties": {
+            "sync_period": { "type": "string", "description": "e.g. 'weekly'." },
+            "publish_day": { "type": "string", "description": "Day the sync is frozen/published, e.g. 'Tuesday'." },
+            "model": { "type": "string", "description": "Prep model, e.g. 'rolling-prep: prior week frozen, next-week draft accumulates'." },
+            "pdf_render_schedule": { "type": "string", "description": "Scheduled PDF render, e.g. 'Tuesday 07:00 (MOT Weekly Sync PDF task)'." }
+          }
+        },
+        "storage_profile": {
+          "type": "object",
+          "description": "Where the Drive lives, which toggles churn/lock guards in the B-tools.",
+          "required": ["kind", "platform", "root"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "type": "string", "enum": ["synced_cloud", "local", "git"], "description": "synced_cloud (OneDrive) -> churn/lock guards ON." },
+            "platform": { "type": "string", "description": "OS, e.g. 'windows'." },
+            "root": { "type": "string", "description": "Absolute Drive root (the only absolute path B-tools need). Person/instance overridable but seeded company-wide for the reference machine." },
+            "protected_root_markers": {
+              "type": "array",
+              "description": "Marker substrings identifying a LIVE / protected Drive the migration kit must never mutate. If the manifest's resolved root contains any of these, the migration executor (apply-moves.mjs) HARD-REFUSES --apply/--rollback unless the operator sets MIGRATION_TARGET_IS_NOT_PROTECTED=1 AND passes --i-understand. The reference instance uses ['OneDrive - MetaOptics']; an unprotected target Drive leaves this empty (`[]`) so a real migration can run.",
+              "items": { "type": "string" }
+            },
+            "churn_guards": { "type": "boolean", "description": "Prefer incremental writes + content-equality no-op + tmp-rename swaps." },
+            "lock_guards": { "type": "boolean", "description": "Retry-on-EBUSY/EPERM writes (open-file/sync-lock safe)." }
+          }
+        }
+      }
+    },
+    "person_profile": {
+      "type": "object",
+      "description": "Per-PERSON focus slots. Seeded from company_profile, then ADAPTED to the person's detected focus. Fields marked focus_detected:true are populated by the focus-detector C module from what dominates the person's Drive; the rest are identity/config.",
+      "required": ["person", "focus"],
+      "additionalProperties": false,
+      "properties": {
+        "person": {
+          "type": "object",
+          "description": "Whose instance this is.",
+          "required": ["name", "email", "role"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string" },
+            "role": { "type": "string", "description": "Job role, the prior for focus inference." }
+          }
+        },
+        "root_override": {
+          "type": "string",
+          "description": "Absolute Drive root for THIS person's machine if it differs from the company seed. Optional."
+        },
+        "focus": {
+          "type": "object",
+          "description": "The detected focus profile — what dominates this person's work. Populated by the focus-detector C module (FOCUS-DETECTED).",
+          "required": ["focus_verticals", "focus_tiers"],
+          "additionalProperties": false,
+          "properties": {
+            "focus_verticals": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Verticals (subset of company vocab.verticals) this person concentrates on.",
+              "items": { "type": "string" }
+            },
+            "focus_tiers": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Tier numbers this person actively works (e.g. [1,2]).",
+              "items": { "type": "integer" }
+            },
+            "focus_contexts": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Context tags (subset of company context_registry) central to this person.",
+              "items": { "type": "string" }
+            },
+            "focus_entities": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Company/partner Overview paths this person engages most (the accounts that dominate their Drive).",
+              "items": { "type": "string" }
+            },
+            "focus_document_kinds": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Document genres this person produces/consumes most (e.g. test reports, optical analysis, meeting records).",
+              "items": { "type": "string" }
+            },
+            "extra_entities": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Focus-specific entities this person tracks that the company seed lacks (a CFO's banks/auditors; a VP-Systems' instrument vendors). Extends — never overwrites — the company entity_registry.",
+              "items": {
+                "type": "object",
+                "required": ["name", "role"],
+                "additionalProperties": false,
+                "properties": {
+                  "name": { "type": "string" },
+                  "role": { "type": "string" },
+                  "email": { "type": "string" }
+                }
+              }
+            },
+            "extra_taxonomy": {
+              "type": "array",
+              "description": "FOCUS-DETECTED. Focus-specific taxonomy extensions (categories/subfolders the person needs that the company seed lacks). Usually empty for a person whose work fits the shared tiers.",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "cadence_override": {
+          "type": "object",
+          "description": "Per-person cadence deviations from the company sync cadence, if any (optional). Most teammates inherit the company cadence.",
+          "additionalProperties": false,
+          "properties": {
+            "sync_period": { "type": "string" },
+            "publish_day": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

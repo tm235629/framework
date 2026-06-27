@@ -1,0 +1,17 @@
+{
+  "name": "knowledge-os-framework-tools",
+  "version": "0.1.0",
+  "description": "Standalone B-library: deterministic, manifest-driven knowledge-base tools (index, audit, extract, entities, walk, focus) for a MetaOptics-style agent-navigable Drive. Installs its own gray-matter so it no longer depends on MOT's dashboard node_modules.",
+  "type": "module",
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "scripts": {
+    "index": "node kb-index.mjs",
+    "audit": "node kb-audit.mjs",
+    "extract": "node kb-extract.mjs",
+    "entities": "node kb-entities.mjs",
+    "walk": "node kb-walk.mjs",
+    "focus": "node kb-focus.mjs"
+  }
+}
