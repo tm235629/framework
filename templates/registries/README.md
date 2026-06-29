@@ -26,7 +26,7 @@ value in these templates is a `{company-slot}` marker naming the manifest field 
 
 | Template | Fills (manifest field) | What it is |
 |---|---|---|
-| [entity-registry.template.json](entity-registry.template.json) | `company_profile.entity_registry` | The people→companies→roles seed. **People mandatory**; companies **derivable from `__Projects/` folder names**, so the `companies` block is optional. |
+| [entity-registry.template.json](entity-registry.template.json) | `company_profile.entity_registry` | The **people** seed (the only thing this manifest field holds). Companies are **derived from `<projects_root>/` folder names**; company metadata a folder can't carry lives in that company's `Overview.md` frontmatter, not here. |
 | [context-registry.template.json](context-registry.template.json) | `company_profile.context_registry` | The confusable-workstream guardrail: each tag = an owner + its related siblings, each sibling carrying a **mandatory difference note**. |
 
 ## Why FIRST (the entity-registry-first lesson)
@@ -42,9 +42,10 @@ registries remove, not a symptom to clean up twice.
 - **People are the irreducible seed** (`required: ["people"]`): own-company staff + recurring external
   contacts, each `{person-name}` / `{person-email}` / `{person-role}`. `internal: true` marks own-company
   staff (matched against `company_profile.company.domain`) for sender classification.
-- **Companies are derivable** from `__Projects/` folder names — so seed a `companies` row only to record
-  what a folder name can't (a role, an alias, the canonical `Overview.md` path). Absent companies are
-  still recognised from their folder.
+- **Companies are not seeded here** — they are **derived** from `<projects_root>/` folder names. Company
+  metadata a folder name can't carry (a role, an alias, the canonical `Overview.md` path) lives in that
+  company's `Overview.md` frontmatter, which the resolver folds into the project graph (`config.schema.json`
+  accepts only `people` under `entity_registry`).
 - The **entity-resolver** C module resolves names/emails seen in email + meetings against this seed.
 
 ## context-registry — register before use
@@ -74,7 +75,8 @@ the instance that owns them.
 ## Filling these for a new instance
 
 1. **Seed `people`** in the entity registry (mandatory) — copy the shape, replace every `{…}` slot,
-   delete the `_examples` key. Add `companies` rows only for the non-derivable cases above.
+   delete the `_examples` key. (Companies are derived from their folders — annotate company metadata in the
+   company's `Overview.md` frontmatter, not here.)
 2. **Seed `context_registry`** for every workstream with a confusable sibling — tag, owner, and a
    reciprocal difference note on each side. Drop the `x-examples` key.
 3. **Paste both** into the instance manifest under `company_profile.{entity_registry,context_registry}`;

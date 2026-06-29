@@ -99,9 +99,9 @@ what the debt audit and the company's actual business lanes demand, not invented
       synonym pairs to one canonical token each** now (the reference instance shipped `researcher`/`research`,
       `supplier`/`vendor` *(reference-instance examples — do not transfer; re-derive your own vocab)*
       uncontrolled and pays for it) — keep losers only in an alias/`legacy` list, never as parallel valid tokens.
-- [ ] **Seed the entity registry** (`entity_registry`) — people→roles, and a real `companies` key. This is the
-      single source of truth **MOT never built**; generate companies from the entity-card folders rather than
-      hand-typing them (`tooling/kb-entities.mjs` is the generator). Seed it *first*, so confusable people/
+- [ ] **Seed the entity registry** (`entity_registry`) — **people→roles** (the only thing the manifest field
+      holds). This is the single source of truth **MOT never built**; companies are **generated** from the
+      entity-card folders rather than hand-typed (`tooling/kb-entities.mjs` emits them to `entities.json`, not the manifest). Seed it *first*, so confusable people/
       companies have one home.
 - [ ] **Seed the context registry** (`context_registry`) — every pair of confusable workstreams gets a
       `tag` + `what` + `owner` (the current-position file) + `related[].difference` (the mandatory note that
@@ -276,7 +276,7 @@ the right is what this runbook does instead.*
 | **Content-first.** Files arrived before any schema; frontmatter, placement rules, lifecycle, and the context registry were retrofitted after incidents (the Bosch/STMicro tester confusion is the scar). | **Schema + Standards + registries first** (Phases 1–2), gated, before any content moves. |
 | **Tooling-after-moves.** The dead-edge validator was written *after* a reorg broke ~170 references. | **Stand up validator + indexer + walker in Phase 3, BEFORE the migration** — and capture a baseline finding count the migration must beat. |
 | **Heuristic-then-clean-up-twice migration.** Two Drive-wide reorg waves of rework. | **One gated, reversible, database-first migration** (Phase 4): inventory → gate 1 → rename_map → gate 2 → executed_moves, dups parked in `_superseded/`, replayable rollback. |
-| **No entity registry ever existed** → recurring people/company tangles. | **Seed the entity registry first** (Phase 1) — people + a generated `companies` key as one SOT. |
+| **No entity registry ever existed** → recurring people/company tangles. | **Seed the entity registry first** (Phase 1) — people as the seed; companies generated from their folders (kb-entities → `entities.json`) as one SOT. |
 | **Confusable workstreams with no guardrail.** Sibling testers cross-bled. | **Context registry seeded in Phase 1**; an **adversarial content pass** in Phase 4 verifies no cross-port. |
 | **Ghost stubs left by interrupted moves** → duplicate dashboard nodes + dead links. | **Ghost-stub detection in Phase 0** (`inbound==0` + tiny + dead refs), resolved as user-confirmed tier-3 destroys in Phase 4. |
 | **One fact in up to five places; excludes triplicated across tools.** | **The manifest is the single source**; every B-tool is a pure function of it — no hand-mirrored excludes/vocab. |

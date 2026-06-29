@@ -78,9 +78,10 @@ load-bearing** — they keep confusable programs (e.g. two customers' tester pro
 each other. `kb-audit` flags a context whose `owner` is missing or unresolved.
 
 ### `entity_registry`
-- **`people[]`** — `{ name, email, role, internal? }`. The people single-source-of-truth; `kb-entities`
-  emits it verbatim and the entity-resolver matches senders against it. (A `companies` block is optional and
-  largely derived from folder names — see the entity-registry template.)
+- **`people[]`** — `{ name, email, role, internal? }`. The **only** field `entity_registry` holds (the schema
+  is `additionalProperties: false`). `kb-entities` emits it verbatim and the entity-resolver matches senders
+  against it; **companies are derived** from the project folders (not seeded here), with any extra company
+  metadata living in that company's `Overview.md` frontmatter.
 
 ### `excludes` — what the graph ignores
 `{ dirs[], skip_names[], conflict_pattern, exclude_path_patterns[] }`. **Note the per-tool scoping:**
