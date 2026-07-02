@@ -42,6 +42,8 @@ node_kind: topic
 
 Run on the **target** person's machine. `<DRIVE>` = their Drive root (e.g. `C:/Users/<them>/OneDrive - <Your Company>`). Forward slashes throughout.
 
+> **cwd note:** the commands in this section run from **inside `tooling/`** (Step B `cd tooling`), so the tool scripts are unprefixed (`node kb-index.mjs …`). The rest of the docs (`docs/README.md`, `tooling/TOOLS.md`) write commands **repo-root-relative** (`node tooling/kb-index.mjs …`); both are the same command, just a different working directory.
+
 **A. Get the framework onto the target machine.** Copy (or `git clone`) the whole framework repo to the target — either standalone, or as a `__Framework/framework/` folder inside their Drive. If it lives inside their Drive, it is already excluded from their graph (the manifest's `excludes.dirs` lists `__Framework`), so it never pollutes their index.
 
 **B. Install the tools** (zero MOT coupling — tooling carries its own `package.json`):

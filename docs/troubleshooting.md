@@ -52,6 +52,9 @@ the synthetic `*.example.json` versions ship.
 **Fix:** use the example: `cp tooling/manifest.example.json tooling/manifest.json` (and likewise
 `company-seed.example.json` → `company-seed.json`), then fill with your real values. In a real same-company
 deployment, `company-seed.json` is your company's shared seed.
+**On the reference (Instance-Zero) machine:** the filled files are **not** under `tooling/` — they live at
+`__Framework/_instance/` (`manifest.mot.json`, `company-seed.json`, `instance-zero/`), the private sibling of
+this repo. Point the tool at that path, or copy the file down into `tooling/`.
 
 ## `jq: command not found` (teammate runbook, Step 1)
 **Cause:** `bootstrap/teammate.md` shows a `jq` one-liner to lift the shared seed; `jq` isn't installed by

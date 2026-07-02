@@ -42,8 +42,9 @@ record them — they pick which adapter ships first and which guards turn on:
 `storage` (synced-cloud → `storage_profile.churn_guards`+`lock_guards` ON / local-git → OFF).
 
 All commands run from the Drive root with Node ≥ 18. `MANIFEST=path/to/manifest.json` below is the
-instance manifest you build in Phase 1–2 (schema: `tooling/config.schema.json`; the worked
-reference is `tooling/manifest.mot.json`).
+instance manifest you build in Phase 1–2 (schema: `tooling/config.schema.json`; the structure
+reference is `tooling/manifest.example.json` — the filled reference manifest is private, at `_instance/`
+on Instance Zero).
 
 ---
 
@@ -67,7 +68,7 @@ Bosch/STMicro confusion).
 
 | # | Artifact (template) | Where it goes | Tool / command |
 |---|---|---|---|
-| 1.1 | **company_profile** of the manifest — taxonomy (`project_tiers`, `category_rules`, `subfolder_convention`, `non_card_subfolders`), `vocab` (tier_scale, phase_enum, verticals, edge_types, node_kinds, status_enum), `excludes`, `catalog_profile`, `brand`, `cadence`, `storage_profile`. Author from the Standards templates — fill the values, don't restate the rule shapes. | `manifest.json` → `company_profile` | hand-author against `tooling/config.schema.json`; copy structure from `tooling/manifest.mot.json` |
+| 1.1 | **company_profile** of the manifest — taxonomy (`project_tiers`, `category_rules`, `subfolder_convention`, `non_card_subfolders`), `vocab` (tier_scale, phase_enum, verticals, edge_types, node_kinds, status_enum), `excludes`, `catalog_profile`, `brand`, `cadence`, `storage_profile`. Author from the Standards templates — fill the values, don't restate the rule shapes. | `manifest.json` → `company_profile` | hand-author against `tooling/config.schema.json`; copy structure from `tooling/manifest.example.json` (the filled reference manifest is private — `_instance/` on Instance Zero) |
 | 1.2 | **entity registry** (people→roles seed; companies derivable from folder names) | `manifest.json` → `company_profile.entity_registry` | fill `templates/registries/entity-registry.template.json`, drop the `_examples` key, paste in |
 | 1.3 | **context registry** (every confusable workstream: tag + owner + reciprocal `difference` note on each sibling) | `manifest.json` → `company_profile.context_registry` | fill `templates/registries/context-registry.template.json`, drop `x-examples`, paste in |
 | 1.4 | **person_profile** — for a teammate instance, copy `company_profile` verbatim as the shared seed, then run the focus-detector to fill `person_profile.focus`; for a new company, fill the identity block by hand | `manifest.json` → `person_profile` | `node tooling/kb-focus.mjs manifest.json graph-index.json` (teammate only; the manifest-driven detector — reads what dominates the person's Drive) |
@@ -167,8 +168,30 @@ Build the periodic-sync orchestrator + its ingest adapter, thin over the Standar
 - **Idealization:** parameterize everything — source paths, URLs, crop/junk values resolve from the
   manifest; a skill body that hardcodes a path is a bug. Keep skills thin (~1–2 screens); substance lives
   in the Standards they cite by `{standard-…}` slot.
-- *(Phase 7 — dashboard — is optional and skipped unless a UI is wanted; agents + CLI consume
-  `graph-index.json` directly.)*
+
+---
+
+## Phase 7 — Dashboard *(optional projection UI)*
+
+- **Skip unless a UI is wanted** — agents + CLI consume `graph-index.json` directly.
+- If wanted, run the shipped **dashboard slice** per [SETUP_SEQUENCE Phase 7](SETUP_SEQUENCE.md): vendor
+  `dashboard/`, `npm install`, `node tooling/kb-dashboard-config.mjs "$MANIFEST"`, then
+  `KB_ROOT=<drive-root> node dashboard/server.js` (**`KB_ROOT` required — no fallback**). **Acceptance:**
+  `/api/config` echoes the root, `/api/graph` returns nodes, Projects renders `kb-extract` output, plugin
+  tabs (Sync/To-Do/Calendar/Assignments) show the configured-empty state
+  ([`dashboard/DATA_CONTRACT.md`](../dashboard/DATA_CONTRACT.md)). On a fresh greenfield Drive the data tabs
+  are empty until content lands — that empty state *is* the pass.
+
+## Phase 7b — Outreach module *(optional; opt-in — skip if the Drive owner does no outbound sales)*
+
+- **Skip if no outreach need.** Otherwise stand up the pooled contact register + shortlist/draft workflow per
+  [SETUP_SEQUENCE Phase 7b](SETUP_SEQUENCE.md): decide shared vs instance-local
+  ([`slices/contact-register/DESIGN.md`](../slices/contact-register/DESIGN.md)), enable + fill
+  `company_profile.contact_register`, seed the register (gated, dry-run default — greenfield seeds from lead
+  sources, since there is no legacy mail pile), instantiate the three outreach Standards + two skill
+  templates, fill selection weights, write per-sender `person_profile.voice_profile` / `outreach_sender`, and
+  wire `cadence.outreach`. Status + company axes are **derived at extract** (`vocab.derived_contact_status`),
+  never stored.
 
 ---
 

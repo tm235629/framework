@@ -5,6 +5,10 @@
 node_modules/
 **/node_modules/
 
+# Dashboard slice build output + instance-generated config (regenerable)
+dashboard/dist/
+dashboard/src/config/instance.config.json
+
 # Regenerable tool validation scratch / sandbox outputs
 tooling/_validation/
 migration/_validation/

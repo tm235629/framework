@@ -114,5 +114,17 @@ in the instance that owns it; there is no central aggregator by default. Cross-i
 deliberate *later*, confidentiality-gated, read-only option over selected shareable slices — never an
 automatic merge.
 
+### Three resource classes
+
+Every piece of state an instance touches falls into exactly one class:
+
+- **Copy-time company seed** — the `company_profile` slots (verticals, partner registry, brand, Standards
+  mechanisms), *forked and owned* per instance at bootstrap.
+- **Instance-local person data** — `person_profile` + focus config, private to the owning Drive, never pooled.
+- **Live shared company register** — exactly *one* on-disk SOT per company for a deliberately-shareable
+  *mutable* register (first instance: the contact roster). Opt-in (single-person instances keep it un-shared),
+  **write-gated** (invariant-checked rebuild or CRUD-through-server, never ad-hoc per-drive edits), and read by
+  every teammate instance which computes status locally and derives company axes against its own graph.
+
 For the full treatment (anti-patterns the framework inverts, the end-to-end run, the co-development link with
 the reference instance), read [`../ARCHITECTURE.md`](../ARCHITECTURE.md).

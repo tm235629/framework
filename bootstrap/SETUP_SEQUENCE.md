@@ -110,9 +110,49 @@ if any. The default posture is autonomous; A appears only where a decision is la
   in skill bodies.
 
 ## Phase 7 — Dashboard  *(optional projection UI)*
-- **Goal:** serve the derived JSON + one content-keyed write-back overlay, only if a visual UI is wanted.
-- **B:** re-theme + re-point root + regenerate categorization config; agents + CLI consume
-  `graph-index.json` directly without it. Skip entirely if no UI is needed.
+- **Goal:** serve the derived JSON + the live graph/tree/files views, only if a visual UI is wanted.
+  Agents + CLI consume `graph-index.json` directly without it; **skip entirely (skip = fine) if no UI is
+  needed.**
+- **B (the real procedure — the shipped slice, not a re-theme-from-scratch):**
+  1. **Vendor the slice.** Copy `dashboard/` from the framework into the instance (or run it in place from a
+     checkout outside the synced drive — `node_modules/` in a synced folder churns).
+  2. **`npm install`** in the copied `dashboard/`.
+  3. **Generate instance config from the manifest:**
+     `node tooling/kb-dashboard-config.mjs <manifest.json>` → `dashboard/src/config/instance.config.json`
+     (displayName, dataDir, folder-prefix, contact-register path, plugin-script paths; vocab orders +
+     category rules + brand re-served at `/api/config`).
+  4. **Run pointed at the drive:** `KB_ROOT=<drive-root> node dashboard/server.js` (or `npm run dev` for
+     server + Vite client). **`KB_ROOT` is required — the slice has no MOT fallback and fails fast if unset.**
+- **A — acceptance:** `GET /api/config` echoes the resolved root; `GET /api/graph` returns a non-empty
+  `nodes` array; the **Projects** tab renders `kb-extract` output; every **plugin tab** (Sync / To-Do /
+  Calendar / Assignments) shows the configured-empty state rather than crashing — the graceful-empty rule in
+  [`dashboard/DATA_CONTRACT.md`](../dashboard/DATA_CONTRACT.md). Core data tabs (Projects/Entities/Drift/
+  Contacts) populate once their `kb-*` JSON is present.
+
+## Phase 7b — Outreach module  *(optional; opt-in — a company with no outbound sales skips it)*
+- **Goal:** stand up the pooled contact register + weekly-shortlist / draft-outreach workflow, only when the
+  company does outbound relationship work. **Skip entirely if there is no outreach need** — nothing
+  downstream depends on it. Runs **after registry seeding** (Phase 1) once the entity space exists.
+- **C (decide shared vs instance-local — the [S1] resource-class choice):** a **live shared company
+  register** (`contact_register.shared: true`) when several teammates pool one contact book — pick
+  `storage_profile.shared_root` (a **company-shared** storage location, e.g. a SharePoint-synced library —
+  *not* a person's own drive) and resolve `contact_register.path` against it; a **single-person instance**
+  keeps `shared: false` and the register lives in its own drive. Rationale for pooling (per-drive copies fork
+  Last-contact dates, break the pooled multi-sender shortlist → double-contact risk, and fracture
+  do-not-contact flags): [`slices/contact-register/DESIGN.md`](../slices/contact-register/DESIGN.md).
+- **B:** enable + fill `company_profile.contact_register` (path, `schema_columns`, `flag_enum`,
+  `status_thresholds`, `role_inbox_patterns`, `senders`, `sources_dir`/`shortlists_dir`/`drafts_dir`); seed
+  the register from lead sources or a first mail-scan (invariant-gated, dry-run default per the DESIGN safety
+  model); instantiate the three outreach **Standards** (`templates/standards/{contact-register-contract,
+  contact-selection,outreach-framework}.template.md`) and the two **skill** templates
+  (`templates/skills/{contact-select,outreach-draft}.template.md`); fill the selection weights; write each
+  sender's `person_profile.voice_profile`; set `person_profile.outreach_sender`; wire `cadence.outreach`
+  (`shortlist_period`, `staleness_flag_days`).
+- **B (derived, never stored):** person status (`vocab.derived_contact_status` = active/idle/dormant/
+  uncontacted) and company axes are computed **at extract** by `kb-contacts`, against the extracting
+  instance's own graph — never written back into the shared register.
+- **A:** none for instantiating; the register write itself is gated (dry-run → invariant-checked `--apply` →
+  timestamped backup → atomic write).
 
 ## Phase 8 — Learnings loop activation
 - **Goal:** turn on self-improvement from day one, with a **concrete promotion cadence** (MOT described
@@ -120,7 +160,7 @@ if any. The default posture is autonomous; A appears only where a decision is la
 - **B/C:** start the shared Learnings log; set a recurring promotion review that graduates stable learnings
   into Standards; surface an *unpromoted-learnings count* as a STATE.md attention flag.
 
-## Phase 9 — Steady-state drift loop  *(continuous; the piece MOT lacks)*
+## Phase 9 — Steady-state drift loop  *(continuous; live on the reference instance since 2026-06)*
 - **Goal:** keep the Drive converged on its setpoint without re-running setup.
 - **B (sensors):** standing drift auditors over `graph-index.json` — missing frontmatter, unplaced files,
   stale `valid_as_of`, dead refs, placement-rule violations.

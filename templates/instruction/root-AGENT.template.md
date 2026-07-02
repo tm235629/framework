@@ -162,8 +162,9 @@ call replaces multiple reads.
 *Slot: the instance's B-library exposed as commands — the structured-index/graph tool (`{graph-cli}`), the
 state generator (`{state-generator}`), the TL;DR extractor, the project-filter query, the data-layer extractor,
 the catalog walker (`{catalog-tool}`, a **write** tool — not for reading), the PDF renderer, the dashboard
-server. One row each: tool · when-to-use · command. Each is a pure function of the manifest — no per-instance
-code edit, only a different `manifest.json`.*
+server (**emit this row only if Phase 7 (dashboard) was run** — an instance with no UI has no dashboard
+server; same conditional posture as the `{catalog-tool}` write-tool caveat). One row each: tool · when-to-use ·
+command. Each is a pure function of the manifest — no per-instance code edit, only a different `manifest.json`.*
 
 ---
 

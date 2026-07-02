@@ -60,14 +60,17 @@ domain. Re-derive every angle-bracket placeholder for your own instance.)
 | 4 | **ROOT OVERRIDE** — point the env-var/root at their Drive | Phase 3 | No (one value) |
 | 5 | **REGISTER WORKSTREAMS** — confirm their contexts are in the shared registry | Phase 1 | Only if a new fork |
 | 6 | **VERIFY** — run `kb-index` + `kb-audit` on their instance | Phase 3 + 9 | No (run) |
+| 7 | **OPTIONAL MODULES** — bind the shared contact register (do **not** copy it) + register the mail archive as a contribution source; stand up the dashboard slice | Phase 7 / 7b | Only if the company runs outreach / wants a UI |
 
 ---
 
 ## Step 1 — SEED: copy the company_profile verbatim
 
-The entire `company_profile` block of `manifest.mot.json` is the **shared seed**. Copy it **byte-for-byte**
-into the teammate's `manifest.json`. Do **not** re-derive, re-infer, or "improve" any of it — these are
-company-invariants, identical for every teammate:
+The entire `company_profile` block of the **shared seed** (`company-seed.json` — the filled seed is private,
+obtained out-of-band; `tooling/company-seed.example.json` is the shipped synthetic stand-in; on Instance Zero
+the filled files live at `../_instance/`) is the seed. Copy it **byte-for-byte** into the teammate's
+`manifest.json`. Do **not** re-derive, re-infer, or "improve" any of it — these are company-invariants,
+identical for every teammate:
 
 - `taxonomy` (project_tiers, category_rules, subfolder_convention, non_card_subfolders)
 - `vocab` (tier_scale, phase_enum, **verticals**, **edge_types** — the valid/legacy/provenance vocabulary,
@@ -81,8 +84,10 @@ company-invariants, identical for every teammate:
 ```bash
 # the only "Phase 1-3" work for a teammate: lift the shared seed.
 # (jq shown for clarity; copy/paste is equally valid — it is verbatim.)
+# seed model = company-seed.json (private, obtained out-of-band; company-seed.example.json is the
+# shipped stand-in; on Instance Zero the filled seed lives at ../_instance/company-seed.json).
 jq '{manifest_version, company_profile}' \
-  "tooling/manifest.mot.json" > "<teammate-drive>/manifest.json"
+  "company-seed.json" > "<teammate-drive>/manifest.json"
 ```
 
 Then append a fresh `person_profile` shell (filled in Steps 2-4). The result must validate against
@@ -99,10 +104,16 @@ Then append a fresh `person_profile` shell (filled in Steps 2-4). The result mus
 
 ## Step 2 — DETECT FOCUS: fill person_profile.focus, then extend entities
 
-This is the one piece of genuine **C (reasoning)** work. Run the **focus-detector** (`focus-detect.mjs`,
-the **v1 distribution** variant) over the teammate's own `graph-index` (Step 6 produces it; for a first run
-use a frozen metadata-only snapshot exactly as the sandbox did) + the seeded `company_profile`. It fills
-`person_profile.focus`:
+This is the one piece of genuine **C (reasoning)** work. Run the **production focus-detector**:
+
+```bash
+node tooling/kb-focus.mjs <manifest> --graph <graph-index>
+```
+
+over the teammate's own `graph-index` (Step 6 produces it; for a first run use a frozen metadata-only
+snapshot exactly as the sandbox did) + the seeded `company_profile`. `kb-focus.mjs` is the v1-distribution
+detector productionized from the sandbox `slices/focus-detector/focus-detect.mjs` (validation provenance
+only — not the tool you run). It proposes `person_profile.focus`:
 
 - `focus_verticals` — the subset of `vocab.verticals` this person concentrates on
 - `focus_tiers` — the tier numbers they actively work
@@ -204,8 +215,8 @@ their absolute Drive root; the instance composes person-over-company, so the ove
 Do not paste the reference instance's values.)*
 
 The B-tools take the **manifest path as their first positional argument** (default
-`tooling/manifest.mot.json`), so "pointing at their Drive" is simply passing **their**
-`manifest.json`:
+`tooling/manifest.example.json`, the shipped synthetic stand-in), so "pointing at their Drive" is simply
+passing **their** `manifest.json`:
 
 ```bash
 node tooling/kb-index.mjs "<teammate-drive>/manifest.json" --out "<teammate-drive>/data/graph-index.json"
@@ -266,6 +277,51 @@ Optionally also run:
 
 ---
 
+## Step 7 — OPTIONAL MODULES: shared register + outreach, and the dashboard
+
+Both are **opt-in** — a teammate with no outreach role, or who wants no UI, skips this step. It maps to
+SETUP_SEQUENCE **Phase 7b (outreach)** and **Phase 7 (dashboard)**.
+
+### 7a — Shared contact register (bind, do NOT copy)
+
+The pooled contact register is a **live shared company register** — exactly **one** on-disk source of truth
+per company ([`slices/contact-register/DESIGN.md`](../slices/contact-register/DESIGN.md)). A teammate instance
+is a **reader + contributor**, never a second copy. This is the single place the teammate model diverges from
+"copy the company_profile verbatim": `contact_register` came over in the Step-1 seed as *configuration*, but
+the **register file itself is not copied** — copying it would fork the Last-contact dates, break the pooled
+multi-sender shortlist (two people email the same contact), and fracture do-not-contact flags. So:
+
+- [ ] **Bind, don't copy.** Confirm `company_profile.contact_register.shared: true` and that
+      `storage_profile.shared_root` points at the **company-shared** storage (a SharePoint-synced library —
+      *not* this person's own drive). `contact_register.path` then resolves against `shared_root`, so the
+      teammate reads the **one** shared file. Do **not** place a register copy under the teammate's own root.
+      *(A genuinely solo instance instead keeps `shared: false` — but then it is not a "teammate" of anyone.)*
+- [ ] **Register this mailbox as a contribution source.** A teammate can only see their **own** mail archive,
+      so they contribute a per-instance **mail-scan summary** batch (the `sources_dir` batch), which the merge
+      step folds into the shared SOT (the reference embryo is `merge_summaries.py` — DESIGN "Multi-instance
+      model"). Point the outreach ingest at **this person's** mail adapter (Step 3), not the shared archive.
+- [ ] **Run `kb-contacts` locally for the derived view.** The teammate computes person **status** locally at
+      extract (`vocab.derived_contact_status` = active/idle/dormant/uncontacted) against the real current
+      date, and derives company axes against **their own** graph — **no derived state is written back** into
+      the shared register:
+      ```bash
+      node tooling/kb-contacts.mjs "<teammate-drive>/manifest.json" --graph "<teammate-drive>/data/graph-index.json" --out "<teammate-drive>/data/contacts.json"
+      ```
+- [ ] **Voice + cadence.** Set this person's `person_profile.voice_profile` and `outreach_sender` (they are
+      one sender in the pooled shortlist); `cadence.outreach` is a shared company-invariant that already came
+      over in the seed. Instantiate the two skill templates (`contact-select`, `outreach-draft`) if they run
+      the shortlist/draft workflow themselves.
+
+### 7b — Dashboard slice *(optional UI)*
+
+- [ ] **Skip unless a UI is wanted** — `kb-*` output + the graph feed everything headless. If wanted, run the
+      shipped slice per [SETUP_SEQUENCE Phase 7](SETUP_SEQUENCE.md): vendor `dashboard/`, `npm install`,
+      `node tooling/kb-dashboard-config.mjs "<teammate-drive>/manifest.json"`, then
+      `KB_ROOT=<teammate-drive> node dashboard/server.js` (**`KB_ROOT` required — no fallback**). The Contacts
+      tab renders the teammate's **local** `contacts.json` (their own derived view of the shared register).
+
+---
+
 ## Acceptance checklist
 
 A teammate instance is stood up when **all** of these hold:
@@ -288,6 +344,11 @@ A teammate instance is stood up when **all** of these hold:
       Phase-9 drift loop.
 - [ ] **Confidentiality confirmed:** all financial/HR/legal entities and sources live **only** in this
       instance — nothing was written to the shared seed or any central store.
+- [ ] **Shared register bound, not copied** *(if outreach is in scope)*: `contact_register.path` resolves
+      against `storage_profile.shared_root` (the company-shared library, not this drive); **no register copy**
+      lives under the teammate's own root; this mailbox is registered as a contribution source; `kb-contacts`
+      ran locally producing a **derived-only** `contacts.json` (no status/axes written back to the shared
+      file). Skipped deliberately if the teammate has no outreach role.
 
 When every box is checked, the teammate has a **federated, focus-adapted instance** on the common mechanisms
 — not a login to a central system, and not a fresh design pass.

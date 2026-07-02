@@ -1,5 +1,5 @@
 ---
-description: The registries/ template layer — the two SEED registries (entity + context) a new instance fills FIRST, why they come first, what each {company-slot} binds to in the manifest, and how the focus-detector extends the entity seed per person.
+description: The registries/ template layer — the two SEED registries (entity + context) a new instance fills FIRST plus the live shared contact register (resource class 3), why the seeds come first, what each {company-slot} binds to in the manifest, and how the focus-detector extends the entity seed per person.
 references:
   - path: tooling/config.schema.json
     type: standard
@@ -28,6 +28,28 @@ value in these templates is a `{company-slot}` marker naming the manifest field 
 |---|---|---|
 | [entity-registry.template.json](entity-registry.template.json) | `company_profile.entity_registry` | The **people** seed (the only thing this manifest field holds). Companies are **derived from `<projects_root>/` folder names**; company metadata a folder can't carry lives in that company's `Overview.md` frontmatter, not here. |
 | [context-registry.template.json](context-registry.template.json) | `company_profile.context_registry` | The confusable-workstream guardrail: each tag = an owner + its related siblings, each sibling carrying a **mandatory difference note**. |
+| [contact-register.template.md](contact-register.template.md) | `company_profile.contact_register` | The **live shared contact register** (resource class 3, not a seed): a markdown table, one row per person, the person-axis SOT for the dashboard Contacts tab. Markdown (a living human-edited table), not JSON — and **not bootstrap-copied**; see below. |
+
+## Seed registries vs live shared registers
+
+Not everything in this folder is a bootstrap-copied seed. There are **two distinct resource classes**:
+
+- **Seed registries (entity + context).** JSON shapes an instance fills once and **pastes into its
+  manifest at bootstrap** — a copy-time artifact. Each instance owns its filled copy; they are not
+  re-shared afterward (the entity seed is a company invariant that the focus-detector *extends*
+  per person, but the paste itself happens once).
+- **The contact register (resource class 3 — live shared register).** Not copied per drive. When
+  `contact_register.shared` is **true** there is **exactly one live on-disk SOT per company**, resolved
+  against `storage_profile.shared_root`; every teammate instance **reads** it (computing status locally at
+  extract and deriving company axes against its own graph) and **contributes** per-instance batches
+  (e.g. mail-scan summaries) that a **merge step** folds back into the SOT. A single-person instance may
+  keep `shared: false`, in which case the register lives as a private copy in its own drive.
+
+  It is **write-gated**: writes go only through the invariant-checked rebuild (dry-run default +
+  timestamped backup + atomic write) or a CRUD-through-server that re-derives immediately — never ad-hoc
+  bulk edits. **Why one SOT, not per-drive copies:** per-drive copies fork Last-contact dates, break the
+  pooled multi-sender shortlist (double-contact risk), and fracture do-not-contact flags — the exact
+  data-integrity failures a single shared register is designed to prevent.
 
 ## Why FIRST (the entity-registry-first lesson)
 

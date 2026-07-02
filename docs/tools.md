@@ -15,7 +15,7 @@ node_kind: topic
 
 # Tools — quick reference
 
-Six deterministic (B-rung) tools plus a migration kit. **Every one is a pure function of the manifest** — no
+Eight deterministic (B-rung) tools plus a migration kit. **Every one is a pure function of the manifest** — no
 Drive-specific path appears in any tool's logic. Deep reference (manifest fields read, output shape, validated
 fidelity vs the reference instance): [`../tooling/TOOLS.md`](../tooling/TOOLS.md).
 
@@ -29,8 +29,10 @@ All run as `node tooling/<tool>.mjs [manifest] [flags]` from the framework root.
 |------|---------|-----|
 | **kb-index** | The hub. Walks the scan roots and emits the typed node/edge graph (`files[]` + `containment[]` + `references[]`) from YAML frontmatter. Everything else reads this. | `node tooling/kb-index.mjs <m> --out data/graph-index.json` |
 | **kb-extract** | Turns each project Overview's `## TL;DR` into a status card (tier/phase/vertical/milestone). | `node tooling/kb-extract.mjs <m> --index data/graph-index.json` |
-| **kb-audit** | **The drift sensor.** Computes findings (missing frontmatter, invalid/legacy ref types, off-enum status, archive/location mismatch, dead refs, stale siblings) with severity + autonomy tier. | `node tooling/kb-audit.mjs <m> --json` |
+| **kb-audit** | **The drift sensor.** Computes findings (missing frontmatter, invalid/legacy ref types, off-enum status, archive/location mismatch, dead refs, stale siblings) with severity + autonomy tier. Adds two contact-register signals (`shortlist_staleness`, `register_vs_derived_drift`) when the register block is enabled. | `node tooling/kb-audit.mjs <m> --json` |
 | **kb-entities** | Emits the entity registry — people (from the manifest) + one card per company folder. **Writes `entities.json` outside `_validation/`** (additive); `--check` validates without writing. | `node tooling/kb-entities.mjs <m> --graph data/graph-index.json --check` |
+| **kb-contacts** | Emits the Contacts-tab `contacts.json` by reading the company's **live shared contact register** (resource class 3); derives person status at extract + company axes from the graph. **Additive write** when `--out` targets the data dir; `--check` validates only. Byte-identical to MOT's live `contacts.json` (505 contacts). | `node tooling/kb-contacts.mjs <m> --graph data/graph-index.json --entities data/entities.json --check` |
+| **kb-dashboard-config** | Generates the dashboard **slice's** `src/config/instance.config.json` from the manifest (display name, category rules, vocab sort orders, brand, plugin scripts); server re-serves it at `GET /api/config`. Dependency-free. | `node tooling/kb-dashboard-config.mjs <m> --check` |
 | **kb-walk** | Generates `_catalog.md` content and validates byte-fidelity against live catalogs. **Dry-run only** — contains no code path that writes a file named `_catalog.md`. | `node tooling/kb-walk.mjs <m> --json` |
 | **kb-focus** | Proposes a `person_profile.focus` block from what dominates a Drive (verticals/tiers/contexts/entities/doc-kinds). A **proposal** for Gate 1, never auto-applied. | `node tooling/kb-focus.mjs <m> --graph data/graph-index.json --out -` |
 
@@ -45,16 +47,22 @@ All run as `node tooling/<tool>.mjs [manifest] [flags]` from the framework root.
 ### How they chain
 ```
 manifest.json
-   ├─► kb-walk        (catalog projection — dry-run)
+   ├─► kb-walk             (catalog projection — dry-run)
+   ├─► kb-dashboard-config (slice src/config → served at /api/config)
    └─► kb-index ──► graph-index.json ──┬─► kb-extract  ──► status cards
-                                       ├─► kb-audit    ──► drift findings (SENSOR)
+                                       ├─► kb-audit    ──► drift findings (SENSOR; +contact-register signals)
                                        ├─► kb-entities ──► entities.json
+                                       ├─► kb-contacts ──► contacts.json (reads the live shared register)
                                        └─► kb-focus    ──► person_profile.focus PROPOSAL ─[Gate 1]
 ```
 
 ## Migration kit (`migration/`)
 
 Reversible, database-first, **two-gate**. Only for a *messy brownfield* Drive (never a clean teammate Drive).
+
+> **Manifest default differs from the `kb-*` tools:** the migration kit defaults its manifest arg to
+> `tooling/manifest.json` (**not shipped** — copy `manifest.example.json` to it, or pass a path explicitly),
+> whereas the `kb-*` tools default to `tooling/manifest.example.json`.
 
 | Tool | Purpose | Run |
 |------|---------|-----|

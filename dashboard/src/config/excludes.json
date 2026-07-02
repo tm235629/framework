@@ -1,0 +1,12 @@
+{
+  "_comment": "Single source of truth for directory names that must never appear in the knowledge graph, the file tree, or _catalog.md files. Consumed by server.js at runtime. FRAMEWORK-SLICE NOTE: this is the slice's DEFAULT exclude set; an instance should generate it from company_profile.excludes.dirs (the manifest guardrails) rather than hand-editing — the same list feeds the kb-walk / kb-index tools and the catalog walker, so keep those in sync.",
+  "dirs": [
+    "__backup", "node_modules", ".git", "__pycache__", ".venv", "dist",
+    "out", "build", "Release", "Debug", "target", "bin", "obj",
+    ".vs", ".idea", ".vscode", ".next", ".parcel-cache", ".pytest_cache",
+    "coverage", "site-packages",
+    "__MACOSX", "platform-tools", "scrcpy-win64-v3.1", "temp_audio",
+    "Junk", "JabRef",
+    "__Framework"
+  ]
+}

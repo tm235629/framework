@@ -10,6 +10,12 @@ references:
   - path: templates/skills/drift-fix.template.md
     type: related
     note: Step 7 runs the read-only drift SENSOR only; the gated drift ACTUATOR is the separate drift-fix skill — never auto-fixed inside the sync.
+  - path: templates/skills/contact-select.template.md
+    type: trigger
+    note: The optional Step 8 outreach cadence hands off to this shortlist sub-skill (guarded on contact_register.enabled).
+  - path: templates/skills/outreach-draft.template.md
+    type: trigger
+    note: The optional Step 8 outreach cadence hands off to this drafting sub-skill for accepted shortlist picks.
   - path: tooling/config.schema.json
     type: standard
     note: Every {company-slot} below binds to a field of this manifest schema (input_adapters, taxonomy, vocab, frontmatter_schema, cadence, scan_roots, entity_registry).
@@ -217,6 +223,32 @@ A batched audit so staleness is caught here, not mid-task. Standards: `{lifecycl
 5. **Output a "Freshness" section** in the roll-up summary: the sensor's high/med counts, what was marked
    superseded, what moved, which summaries/pointers were updated, and any `suspected_stale` left for the
    user.
+
+## Step 8 — Outreach cadence *(OPTIONAL — {outreach-cadence})*
+
+> **Guard: run this step ONLY when `{contact-register}.enabled`** (manifest
+> `company_profile.contact_register`). Instances without a contact register skip it entirely — no empty
+> section, no note. Cadence is `{cadence.outreach.shortlist_period}`, so a light-mode run inside that period
+> may still run it.
+
+Refresh the outreach loop off the just-updated register + roll-up. Each sub-step is a **gated / derived**
+mechanism — the register is a live shared register (mutated only through gated rebuild or
+CRUD-through-server), and every read recomputes status locally:
+
+1. **Rebuild the register (gated).** Fold any per-instance contribution batches (e.g. mail-scan summaries)
+   into the shared register via the gated rebuild — **dry-run is the default**; the real write is
+   invariant-checked, timestamped-backup'd, and atomic (`{contacts-rebuild-tool}`). Never hand-edit the
+   register in bulk.
+2. **Run the contacts extractor:** `{contacts-tool}` → `contacts.json` (recomputes `{derived-status-enum}`
+   status + derived company axes; nothing stored back in the register).
+3. **Contact-select:** hand off to the **contact-select sub-skill** to emit this period's pooled, unassigned
+   shortlist (`{contact-register}.shortlists_dir/<date>.md`, `_archive` rotation).
+4. **Outreach-draft:** for accepted picks, hand off to the **outreach-draft sub-skill** (real-hook +
+   claim-backing + sender `{voice-profile}`; archive-on-supersede).
+5. **Re-extract:** `{extractor-tool}` again so the Contacts tab picks up the new shortlist + drafts.
+
+Bookkeeping stays send-time (`Last contact` + `Notes` only, by the sender); status always recomputes at
+extract — the sync never writes a status into the register.
 
 ---
 

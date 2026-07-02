@@ -54,12 +54,19 @@ the only block an individual instance owns.
 
 ### `vocab` — the controlled vocabularies
 - **`tier_scale`** `{ min, max, labels }` — the strategic-importance scale.
-- **`phase_enum[]`** — engagement states (`engaged`/`acquisition`/`dormant`/`internal`/`archived`).
+- **`phase_enum[]`** — engagement states; **instance-owned** (each instance defines its own set), not a fixed
+  framework enum. The reference instance's current values are `acquisition`, `engaged`, `placement`,
+  `dormant`, `internal`, `archived`, with an objective gate model: `engaged` is PO-gated (a customer PO marks
+  the boundary) — see that instance's `Status_Lifecycle` standard §10.
 - **`verticals[]`** — the product lanes; `kb-focus` reports `focus_verticals` from this set.
 - **`edge_types`** `{ valid[], legacy[], provenance[] }` — the reference-type vocabulary. `kb-audit` flags
   refs whose `type` is outside `valid` (and specially handles `legacy`/`provenance`).
 - **`node_kinds[]`**, **`status_enum[]`**, **`supply_chain_roles[]`** — controlled enums for the matching
   frontmatter fields.
+- **`derived_contact_status[]`** — the contact-status vocabulary (`active` | `idle` | `dormant` |
+  `uncontacted`). **Output-only: DERIVED AT EXTRACT, NEVER STORED** in the register. `kb-contacts` recomputes
+  each row's status every run from its Last-contact date against `contact_register.status_thresholds`, so it
+  can't go stale. (Unlike `status_enum`, which *is* the on-disk lifecycle vocabulary.)
 - **`document_kinds[]`** — `{ key, label, path_patterns }` classifying documents by path; `kb-focus` reports
   `focus_document_kinds` from these.
 
@@ -103,12 +110,56 @@ The roots the tools walk (relative to `storage_profile.root`). `.` means the Dri
 - **`brand`** — accent colors, fonts, `pdf_footer`, `web_qa_target` (used by render/QA tooling).
 - **`input_adapters`** — `email` + `transcription` source descriptors (location, filename grammars, junk
   patterns, backend). Declares *where raw material lands*; the ingest skills consume whatever is present.
-- **`cadence`** — sync period, publish day, the rolling-prep model, PDF render schedule.
+- **`cadence`** — sync period, publish day, the rolling-prep model, PDF render schedule, and **`outreach`**
+  `{ shortlist_period, staleness_flag_days }` — how often the weekly outreach shortlist regenerates and after
+  how many days since a row's Last-contact date a contact is flagged stale/re-engage (present only when
+  `contact_register` is enabled).
+
+### `contact_register` — the live shared company register
+`{ enabled, shared, path, schema_columns[], flag_enum[], status_thresholds{active_days, idle_months},
+role_inbox_patterns[], senders[], sources_dir, shortlists_dir, drafts_dir, derived_json }`. **Opt-in** (`enabled: false` by
+default): the first — and, for now, only — *live shared* register the framework models. When enabled,
+`kb-contacts` reads it into `contacts.json` (the dashboard Contacts tab); absent/disabled ⇒ that tab renders
+its empty state.
+
+- **`enabled`** / **`shared`** — whether this instance has a register at all, and whether the one on-disk copy
+  is company-shared. `shared: true` resolves `path` against `storage_profile.shared_root` (the single copy all
+  teammates read/write); `shared: false` resolves against the instance `root` (a single-person private
+  register).
+- **`path`** — root-relative register markdown (default example `Sales/Contacts/Contacts.md`).
+- **`schema_columns[]`** — the table's person-only columns, in order (Name … Notes). Company axes
+  (role/vertical/phase/tier) are **derived** via *Linked project* against the entity graph, never stored here.
+- **`flag_enum[]`** — allowed *Flag* values (`do-not-contact`, `archived`).
+- **`status_thresholds`** — the day/month cutoffs feeding the DERIVED `derived_contact_status` (see vocab).
+- **`role_inbox_patterns[]`** — inbox prefixes (`info@`, `sales@`, …) a rebuild filters out so a role mailbox
+  is never added as a person.
+- **`senders[]`** — `entity_registry.people` ids that send outreach — the owners of the *pooled* multi-sender
+  shortlist. **`sources_dir` / `shortlists_dir` / `drafts_dir`** — where per-instance mail-scan batches land,
+  where the weekly shortlist is written, and where drafts are written.
+- **`derived_json`** *(optional)* — root-relative path to the derived contacts JSON the instance's extractor
+  writes; lets `kb-audit`'s `register_vs_derived_drift` signal compare register vs extract freshness (absent ⇒
+  the signal skips silently, or pass `--contacts-json`).
+
+**Why one shared copy — the three resource classes.** The framework distinguishes three storage classes; the
+register is the third:
+
+| Class | What | Lifecycle | Example |
+|-------|------|-----------|---------|
+| 1 — copy-time company seed | Company-invariant slots seeded once at bootstrap | Copied, then diverges per instance | `company_profile` |
+| 2 — instance-local person data | This person's focus + identity config | Owned & edited locally, never shared | `person_profile`, `focus` |
+| 3 — live shared company register | **One** on-disk SOT per company for a deliberately-shareable mutable register | Read by every instance (status derived locally); written only through gated rebuild (dry-run default + timestamped backup + atomic write) or CRUD-through-server; per-instance batches merged into the SOT | `contact_register` |
+
+A live shared register exists because per-drive copies would **fork Last-contact dates**, **break the pooled
+multi-sender shortlist** (two senders unknowingly contacting the same person), and **fracture do-not-contact
+flags**. A single-person instance opts out with `shared: false` and keeps the register in its own Drive.
 
 ### `storage_profile` — the safety-critical block
-`{ kind, platform, root, protected_root_markers[], churn_guards, lock_guards }`.
+`{ kind, platform, root, shared_root, protected_root_markers[], churn_guards, lock_guards }`.
 - **`root`** — the absolute Drive root (forward slashes). The single most important field: every tool resolves
   paths from it.
+- **`shared_root`** — the company-shared storage location (e.g. a SharePoint-synced library path) that
+  `shared: true` registers resolve against; distinct from the instance `root`. `null` (default) when no shared
+  library is configured.
 - **`protected_root_markers[]`** — substrings that mark a **protected live Drive**. The migration
   `apply-moves` tool **hard-refuses `--apply`** on any root matching a marker. For the reference instance this
   is `OneDrive - MetaOptics`.
@@ -119,7 +170,14 @@ The roots the tools walk (relative to `storage_profile.root`). `.` means the Dri
 ## `person_profile`
 
 ### `person`
-`{ name, email, role }` — the instance owner.
+`{ name, email, role }` — the instance owner's identity.
+
+### `voice_profile` / `outreach_sender`
+Outreach config for this person, at `person_profile` top level:
+- **`voice_profile`** — root-relative path to this person's outreach voice profile (the tone/style guide
+  `draft-outreach` writes in their voice); `null` when they author no outreach.
+- **`outreach_sender`** — whether this person is a sender in the pooled multi-sender shortlist (their id
+  appears in `company_profile.contact_register.senders`). Default `false`.
 
 ### `root_override`
 An absolute Drive root that **wins over** `company_profile.storage_profile.root` for *this* instance. This is

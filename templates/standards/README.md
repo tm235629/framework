@@ -1,5 +1,5 @@
 ---
-description: The governance-stack template index — the eight generalized Standards contracts (placement, lifecycle, quality, style, info-distribution, output-schema, input-format, graph-wiring) that any instance fills from its manifest. Mechanism only; values live in the manifest.
+description: The governance-stack template index — the eight core generalized Standards contracts (placement, lifecycle, quality, style, info-distribution, output-schema, input-format, graph-wiring) plus three opt-in contact/outreach contracts (contact-register, contact-selection, outreach-framework) that any instance fills from its manifest. Mechanism only; values live in the manifest.
 references:
   - path: tooling/config.schema.json
     type: standard
@@ -18,18 +18,23 @@ node_kind: topic
 
 # standards/ — the generalized GOVERNANCE stack
 
-The eight reusable **contracts** a knowledge-OS runs on, generalized from MOT's worked
-`__Operations/Documentation/Standards/` (+ `__Projects/README_Folder_Guidelines.md`). Each is the
+The reusable **contracts** a knowledge-OS runs on — eight core governance contracts plus three opt-in
+contact/outreach contracts — generalized from MOT's worked
+`__Operations/Documentation/Standards/` (+ `__Projects/README_Folder_Guidelines.md`, `__Sales/Contacts/`,
+`__Documents/PR/Engagement/`). Each is the
 generic **rule shape**; every company-specific vocabulary / enum / verticals / staff value is a
 `{company-slot}` naming the **manifest field** that fills it (`company_profile.*`). Templates carry
 *how*; the manifest carries *what*.
 
 > This stack is the control loop's **setpoint** (desired state). The
 > [drift-detection](../drift-detection/SPEC.md) template is the **sensor** that measures deviation from
-> it; the org/sync skills are the **actuators**. Fill these eight + the manifest and an instance has its
-> governance.
+> it; the org/sync skills are the **actuators**. Fill the eight core (+ the three contact/outreach contracts
+> when the register is enabled) + the manifest and an instance has its governance.
 
-## The eight contracts
+## The contracts
+
+The eight core governance contracts plus three **contact/outreach** contracts (present only when
+`company_profile.contact_register.enabled`):
 
 | Template | Generalizes (MOT) | The contract it carries | Primary slot sources |
 |---|---|---|---|
@@ -41,6 +46,11 @@ generic **rule shape**; every company-specific vocabulary / enum / verticals / s
 | [output-schema.template.md](output-schema.template.md) | `Sync_Content_Schema.md` | the periodic-report output schema (public/private layouts, extraction rules, anonymisation, QA gate) | `cadence`, `vocab.{verticals,tier_scale}`, `entity_registry.people` |
 | [input-format.template.md](input-format.template.md) | `Email_Archive_Format.md` | the inbound-source format spec (filename grammar, file-type inventory, junk patterns) | `input_adapters.email`, `catalog_profile.ext_classification` |
 | [graph-wiring.template.md](graph-wiring.template.md) | `Reference_Graph_Schema.md` | the typed-`references[]` cross-link schema, edge vocabulary, define-once + containment-free rules | `vocab.{edge_types,node_kinds}`, `frontmatter_schema.required_fields` |
+| [contact-register-contract.template.md](contact-register-contract.template.md) | `__Sales/Contacts/README.md` | the live shared contact register: three-axis model (person stored · status computed · company axes derived), editing rules, gated-rebuild safety model, consumption map | `contact_register.*`, `storage_profile.shared_root`, `vocab.derived_contact_status` |
+| [contact-selection.template.md](contact-selection.template.md) | `Contact_Selection_Strategy.md` | the weekly outreach shortlist: filter (F1-Fn) → score → constrain → emit; suggests-never-assigns; dated-file + archive + staleness output | `contact_register.{shortlists_dir,senders}`, `cadence.outreach`, `vocab.{verticals,tier_scale}` |
+| [outreach-framework.template.md](outreach-framework.template.md) | `Engagement_Framework.md` | the anti-advertisement pre-send gate, touch-type ladder, real-hook/claim-backing, venue-not-person disclosure; persona/culture/voice as instance content | `person_profile.{voice_profile,outreach_sender}`, `contact_register.drafts_dir`, `vocab.verticals` |
+
+*The three contact/outreach contracts are opt-in — fill them only when `contact_register.enabled`.*
 
 ## The `{company-slot}` convention (recap)
 
@@ -65,11 +75,17 @@ Every `{curly-marker}` below names the manifest path that fills it — a literal
 | `{staff}` / `{exec}` | `company_profile.entity_registry.people[]` (`internal:true`; `{exec}` = the never-named one) |
 | `{cadence}` / `{publish-day}` | `company_profile.cadence.{sync_period,publish_day}` |
 | `{email-adapter}` | `company_profile.input_adapters.email` |
+| `{register-path}` / `{schema-columns}` / `{flag-enum}` | `company_profile.contact_register.{path,schema_columns,flag_enum}` |
+| `{status-thresholds}` / `{contact-status-enum}` | `contact_register.status_thresholds` / `vocab.derived_contact_status` |
+| `{shortlists-dir}` / `{drafts-dir}` / `{senders}` | `company_profile.contact_register.{shortlists_dir,drafts_dir,senders}` |
+| `{shared-root}` | `company_profile.storage_profile.shared_root` |
+| `{voice-profile}` / `{outreach-sender}` | `person_profile.{voice_profile,outreach_sender}` |
+| `{shortlist-period}` / `{staleness-flag-days}` | `company_profile.cadence.outreach.{shortlist_period,staleness_flag_days}` |
 
 ## Filling the stack
 
 1. Compose the manifest (`tooling/config.schema.json` → a filled `manifest.json`) — the only place values live.
-2. Copy these eight templates into the instance's governance folder; resolve every `{slot}` from the manifest.
+2. Copy these templates into the instance's governance folder (the eight core always; the three contact/outreach contracts when `contact_register.enabled`); resolve every `{slot}` from the manifest.
 3. The skills + the drift auditor already read the manifest, so a filled template is *documentation of* the
    wired contract — not a second source of values.
 4. Keep markdown the source of truth; exemplify the graph rules ([graph-wiring.template.md](graph-wiring.template.md)).

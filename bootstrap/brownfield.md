@@ -56,7 +56,8 @@ instance, cited as a worked example, never a constraint on the Drive you are sta
       It moves/renames/deletes **nothing** and writes only `inventory*.json` (pinned under `migration/_validation/`).
 - [ ] **Run the maintenance/debt audit** — rank the debt into a prioritized table sorted by
       **blocks_replication ↓, severity ↓, effort ↑** (the worked shape is
-      [`instance-zero/MOT_GAP_ANALYSIS.md`](../instance-zero/MOT_GAP_ANALYSIS.md) §2). Surface at minimum:
+      [`MOT_GAP_ANALYSIS.md`](../../_instance/instance-zero/MOT_GAP_ANALYSIS.md) §2 — private, Instance Zero
+      only). Surface at minimum:
       - **Duplicate folders** (two folders for one entity).
       - **Ghost / orphan stubs** — see the detection recipe below; these are the highest-yield brownfield debt.
       - **Conflict files** (sync-merge artifacts, e.g. `*-METAOPTICS<n>.md` / `*-HOST.md`).
@@ -256,8 +257,21 @@ migration has settled the tree.
       (`templates/skills/`), each ending by regenerating every derived index. Wire the input adapter the
       Phase-0 dominant-input answer chose; bundle the transcription prerequisite as a real skill. Parameterize
       paths/URLs/crops from the manifest, never hardcoded.
-- [ ] **Phase 7 — Dashboard** *(optional UI)*. Re-theme + re-point root from `brand`; agents + CLI consume
-      `graph-index.json` directly without it. Skip entirely if no UI is wanted.
+- [ ] **Phase 7 — Dashboard** *(optional UI)*. Skip if no UI is wanted — agents + CLI consume
+      `graph-index.json` directly. If wanted, run the shipped **dashboard slice** per
+      [SETUP_SEQUENCE Phase 7](SETUP_SEQUENCE.md): vendor `dashboard/`, `npm install`,
+      `node tooling/kb-dashboard-config.mjs <manifest.json>` (carries `brand`/vocab through), then
+      `KB_ROOT=<drive-root> node dashboard/server.js` (**`KB_ROOT` required — no fallback**). Acceptance:
+      `/api/config` echoes the root, `/api/graph` returns nodes, Projects renders `kb-extract`, plugin tabs
+      show the configured-empty state ([`dashboard/DATA_CONTRACT.md`](../dashboard/DATA_CONTRACT.md)).
+- [ ] **Phase 7b — Outreach module** *(optional; opt-in)*. Skip if no outbound sales. Otherwise stand up the
+      pooled contact register + shortlist/draft workflow per [SETUP_SEQUENCE Phase 7b](SETUP_SEQUENCE.md):
+      decide shared vs instance-local ([`slices/contact-register/DESIGN.md`](../slices/contact-register/DESIGN.md)),
+      enable + fill `company_profile.contact_register`, seed the register (gated, dry-run default — a
+      brownfield Drive can seed from its existing mail archive via the invariant-checked mail-scan),
+      instantiate the three outreach Standards + two skill templates, fill selection weights, write per-sender
+      `person_profile.voice_profile` / `outreach_sender`, wire `cadence.outreach`. Status + company axes are
+      **derived at extract** (`vocab.derived_contact_status`), never stored.
 - [ ] **Phase 8 — Learnings loop.** Start the shared Learnings log; set a recurring promotion review that
       graduates stable learnings into Standards; surface an *unpromoted-learnings count* as a STATE flag.
 - [ ] **Phase 9 — Steady-state drift loop.** Turn on the standing drift auditors (`kb-audit` over

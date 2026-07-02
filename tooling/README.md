@@ -12,13 +12,15 @@ The **manifest** is the seam of the architecture (ARCHITECTURE §4): C infers it
 every deterministic (B) tool is a pure function of it.
 
 > **Reference instance:** MetaOptics (MOT) is the worked *reference instance* ("Instance Zero") throughout
-> this folder — `manifest.mot.json` is **that instance's** filled manifest, an example, not a framework
-> default. The framework default is the generic `manifest.json` / `manifest.example.json`.
+> this folder. Its **filled** manifest and seed are **private** — they live at `../_instance/`
+> (`manifest.mot.json`, `company-seed.json`), gitignored, not shipped. What ships here are the generic
+> stand-ins: `manifest.example.json` and `company-seed.example.json`.
 
 | File | What it is |
 |------|------------|
 | `config.schema.json` | The reusable manifest **schema** (JSON Schema 2020-12) — the *mechanism*. Splits into a `company_profile` (invariants shared across teammates) and a `person_profile` (focus-specific, partly filled by the focus-detector C module). |
-| `manifest.mot.json` | MetaOptics as **Instance Zero** — the first *filled* instance, reverse-engineered from the reference instance's live config (roots, excludes, taxonomy, vocab, context registry, people seed, brand, adapters, cadence, storage). |
+| `manifest.example.json` | The **shipped synthetic** filled manifest — the default every `kb-*` tool reads, and the structure a new instance copies. The reference instance's real values are private (`../_instance/manifest.mot.json`). |
+| `company-seed.example.json` | The **shipped synthetic** shared seed (`{ manifest_version, company_profile }`) a teammate copies verbatim. The reference instance's filled seed is private (`../_instance/company-seed.json`). |
 
 ## Status: reference artifact, not yet wired
 This is a **design artifact**. The live MOT tools (`mot-tools.js`, `mot-walker`, the dashboard) do **not**

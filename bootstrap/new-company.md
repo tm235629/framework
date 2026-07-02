@@ -133,12 +133,10 @@ Re-author the **company slots** — *do not* reuse MOT's. Fill these manifest se
 Stand the B-library up against the new manifest **first**, so moves are validated and indexes regenerate
 from day one (inverting MOT's "validator written only after a reorg broke ~170 refs").
 
-- [ ] **Vendor the parser** — the `kb-*.mjs` tools currently borrow gray-matter from MOT's
-      `Dashboard/node_modules`. For a real deployment, vendor gray-matter (or a small YAML parser) into the
-      new instance's `tooling/` so the B-library has **no dependency on MOT's tree**. (Header note in
-      `kb-index.mjs`.)
+- [ ] **Install the tooling deps** — run `npm install` in `tooling/`. `tooling/package.json` now vendors
+      gray-matter, so the B-library has **no dependency on MOT's tree** once installed.
 - [ ] Point each tool at the **new `manifest.json`** (every `kb-*.mjs` takes `[manifestPath]` as its first
-      arg; default is MOT's — override it). No code edits.
+      arg; default is the shipped `tooling/manifest.example.json` — override it). No code edits.
   - `kb-index.mjs` → `graph-index.json` (frontmatter graph; pure function of the manifest).
   - `kb-walk.mjs` → per-folder `_catalog.md` generator (the generalized mot-walker; applies
     `excludes.skip_names`/`skip_exts`).
@@ -169,8 +167,8 @@ from day one (inverting MOT's "validator written only after a reorg broke ~170 r
 - [ ] **GATE 2 (A)** — review the exact plan; block on every clash + every `needs_review`.
 - [ ] **Phase 3 — `migration/apply-moves.mjs --apply`** → `executed_moves.json` (reverse-replayable
       rollback). The **MOT-root interlock** in `apply-moves.mjs` hard-refuses `--apply` on the MOT marker —
-      a non-MOT Drive passes the interlock (set `MIGRATION_TARGET_IS_NOT_MOT=1` + `--i-understand` per the
-      Safety contract). Default is dry-run.
+      a non-MOT Drive passes the interlock (set `MIGRATION_TARGET_IS_NOT_PROTECTED=1` + `--i-understand` per
+      the Safety contract). Default is dry-run.
 - [ ] **Verify** — re-inventory; counts reconcile; surplus dups under `_superseded/`; then write sidecars
       and refresh catalogs/graph with the **instance's own** `kb-walk` + `kb-index`.
 
@@ -208,10 +206,25 @@ from day one (inverting MOT's "validator written only after a reorg broke ~170 r
 
 ## Phase 7 — Dashboard *(optional projection UI)*
 
-- [ ] **Skip entirely if no UI is wanted** — agents + CLI consume `graph-index.json` directly. If wanted:
-      re-theme from **`brand`** (`accent`, `accent_variants`, `fonts`, `pdf_footer`, `web_qa_target`),
-      re-point the root, regenerate categorization config. Markdown stays SOT; all JSON/PDF/catalogs are
-      regenerable.
+- [ ] **Skip entirely if no UI is wanted** — agents + CLI consume `graph-index.json` directly.
+- [ ] If wanted, run the shipped **dashboard slice** per SETUP_SEQUENCE Phase 7: vendor `dashboard/`,
+      `npm install`, generate instance config (`node tooling/kb-dashboard-config.mjs <manifest.json>` — this
+      also carries the new company's `brand`/vocab orders through to `/api/config`), then run
+      `KB_ROOT=<drive-root> node dashboard/server.js` (**`KB_ROOT` is required — no fallback**). **Acceptance:**
+      `/api/config` echoes the root, `/api/graph` returns nodes, the Projects tab renders `kb-extract` output,
+      and every plugin tab shows the configured-empty state ([`dashboard/DATA_CONTRACT.md`](../dashboard/DATA_CONTRACT.md)).
+      Markdown stays SOT; all JSON/PDF/catalogs are regenerable.
+
+## Phase 7b — Outreach module *(optional; opt-in — skip if the new company has no outbound sales)*
+
+- [ ] **Skip if no outreach need.** Otherwise stand up the pooled contact register + shortlist/draft workflow
+      per SETUP_SEQUENCE Phase 7b: decide shared vs instance-local ([`slices/contact-register/DESIGN.md`](../slices/contact-register/DESIGN.md)),
+      enable + re-author `company_profile.contact_register` (path, `schema_columns`, `flag_enum`,
+      `status_thresholds`, `role_inbox_patterns`, `senders`, dirs — the **new company's** columns/flags, not
+      MOT's), seed the register from lead sources or a first mail-scan (gated, dry-run default), instantiate
+      the three outreach Standards + two skill templates, fill selection weights, write per-sender
+      `person_profile.voice_profile` / `outreach_sender`, and wire `cadence.outreach`. Person status
+      (`vocab.derived_contact_status`) + company axes are **derived at extract**, never stored.
 
 ## Phase 8 — Learnings loop activation
 

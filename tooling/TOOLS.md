@@ -3,7 +3,7 @@ description: Operator reference for the B-library — the manifest-driven determ
 references:
   - path: tooling/README.md
     type: sibling
-    note: The manifest — config.schema.json (mechanism) + manifest.mot.json (Instance Zero); these tools are pure functions of it.
+    note: The manifest — config.schema.json (mechanism) + manifest.example.json (shipped stand-in; the reference instance's filled manifest is private); these tools are pure functions of it.
   - path: slices/focus-detector/VALIDATION.md
     type: builds-on
     note: kb-focus productionizes the validated v1 focus-detector from this slice (v2/v3 hard-excludes deliberately NOT used — they backfired).
@@ -32,22 +32,25 @@ node_kind: topic
 > filled values — the framework default manifest is generic (`manifest.json`/`manifest.example.json`); a new
 > instance supplies its own root, scan roots, and dashboard/data location via its own manifest slots.
 
-Six deterministic (B-rung) tools. **Every one is a pure function of the manifest**
-(`tooling/manifest.mot.json`, validated by `config.schema.json`) — no `__Projects` /
+Eight deterministic (B-rung) tools. **Every one is a pure function of the manifest**
+(`tooling/manifest.example.json` by default, validated by `config.schema.json`) — no `__Projects` /
 `__Operations` path literal appears in any tool's logic; every root, exclude, category rule,
 vocabulary, and field comes from a manifest slot (ARCHITECTURE §4, the C→B contract). Swap the
 manifest and the same code runs against a different Drive.
 
-**All six are read-only on the live Drive** and write only under their own `_validation/` tree,
-**except** the two noted: `kb-entities` additively emits one derived data file
-(`Dashboard/data/entities.json`), and the migration `apply-moves` mutates a Drive **only** behind a
-two-gate interlock that hard-refuses any **protected live Drive** (the markers are read from the manifest;
-the reference instance's are `OneDrive - MetaOptics`). `kb-walk` and the migration planner are
-dry-run / propose-only by construction.
+**All are read-only on the live Drive** and write only under their own `_validation/` tree,
+**except** those noted: `kb-entities` and `kb-contacts` additively emit one derived data file each
+(`Dashboard/data/entities.json`, `contacts.json`) when `--out` targets the data dir; `kb-dashboard-config`
+writes the dashboard slice's `src/config/instance.config.json`; and the migration `apply-moves` mutates a
+Drive **only** behind a two-gate interlock that hard-refuses any **protected live Drive** (the markers are
+read from the manifest; the reference instance's are `OneDrive - MetaOptics`). `kb-walk` and the migration
+planner are dry-run / propose-only by construction.
 
-Each tool defaults its manifest argument to the generic framework `manifest.json`; pass a different
-manifest path as the first positional to retarget. The examples below pass `manifest.mot.json` — the
-reference instance's filled manifest.
+**Manifest defaults differ by tool family:** the `kb-*` tools default their manifest argument to the shipped
+synthetic **`tooling/manifest.example.json`**; the `migration/*` kit defaults to **`tooling/manifest.json`**
+(**not shipped** — copy `manifest.example.json` to it, or pass a path explicitly; see the migration
+troubleshooting note). Pass a different manifest path as the first positional to retarget. The examples below
+pass `manifest.example.json`; the reference instance's filled manifest is private (not shipped).
 
 ---
 
@@ -109,9 +112,22 @@ reference instance's filled manifest.
   `frontmatter_schema.{required_fields, tldr_keys}`, `taxonomy.category_rules`, `raw_archive_roots`
   (provenance dead-ref reclassification), `frontmatter_schema.avoid_read_marker` (head-only TL;DR read).
 - **Emits:** `_validation/drift.kb.json` — `{counts, findings[]}` (same shape as MOT's `data/drift.json`).
-- **Run:** `node tooling/kb-audit.mjs [manifest] [--out PATH] [--json]`.
+- **Run:** `node tooling/kb-audit.mjs [manifest] [--out PATH] [--contacts-json PATH] [--json]`.
 - **Fidelity vs MOT:** **99.8%** vs `Dashboard/data/drift.json`; the deltas are OneDrive `mtime` tiebreak +
   concurrent validation files, not logic differences.
+- **Contact-register signals (2026-07-02, guarded on `company_profile.contact_register`):** two additional
+  drift signals fire **only** when the contact-register block is present and `enabled` — strict no-ops
+  otherwise (no finding, no crash). They generalize MOT's `tracker-status.py` shortlist-staleness flag.
+  - **`shortlist_staleness`** — resolves `contact_register.shortlists_dir` against `storage_profile.shared_root`
+    (when `contact_register.shared`) or the instance root, finds the newest `YYYYMMDD*.md`, and emits a `med`
+    finding if none exists or the newest is older than `cadence.outreach.staleness_flag_days` (default 7).
+    Requires both `contact_register.enabled` and `cadence.outreach`. A `shared` register with
+    `shared_root: null` emits a `low` misconfiguration finding instead of crashing.
+  - **`register_vs_derived_drift`** — compares the register file mtime to the derived contacts-JSON mtime
+    (path from the `--contacts-json` CLI arg, else the `contact_register.derived_json` manifest hint, else
+    skip with a `KB_AUDIT_DEBUG` note). Register newer than JSON → `low` "register changed since last
+    extract"; JSON missing → `low` "extract has not run"; register missing on disk → skip.
+- **New flag:** `--contacts-json[=]PATH` — the optional derived-contacts-JSON hint for `register_vs_derived_drift`.
 
 ### kb-entities.mjs — entity registry (people + companies)
 - **Purpose:** emit MOT's single source of truth for entities — closing the replication-blocker that people lived
@@ -131,6 +147,54 @@ reference instance's filled manifest.
 - **Fidelity vs MOT:** registry resolves **6 people / 67 companies** from the manifest + graph (the two sources
   that already held the truth).
 
+### kb-contacts.mjs — contacts extractor (reader of the live shared register)
+- **Purpose:** emit the dashboard **Contacts** tab data (`contacts.json`) from a company's **live shared
+  contact register** — the one on-disk markdown table that is resource class 3's single source of truth
+  (ARCHITECTURE §11, S1). It is a **reader**: each teammate instance reads the register, computes person
+  status **locally at extract**, and derives the company axes against **its own** graph. Nothing is written
+  back to the register.
+- **Generalizes:** `mot-tools.js extractContacts()` — the same table parse, extract-time status derivation
+  (calendar-month idle boundary), `flag_enum` validation with legacy-`Status` lift, company-axis derivation
+  via `linked_project` → graph node with per-field fallback to a name-matched entities card, drafts keyed by
+  `to:` email, and facet tallies (unflagged → `flags.none`) — but fully manifest-parameterized.
+- **Reads (manifest):** `company_profile.contact_register.{path, schema_columns, flag_enum, status_thresholds,
+  sources_dir, shortlists_dir, drafts_dir}`; the register path resolves against `storage_profile.shared_root`
+  when `contact_register.shared` else the instance root. Person status
+  (active/idle/dormant/uncontacted) is DERIVED here from the Last-contact date vs the real current date and is
+  **never stored** in the register (`vocab.derived_contact_status`). Also consumes a prebuilt graph
+  (`--graph`) and entity registry (`--entities`) for company-axis derivation, and reads `sources_dir`/drafts.
+- **Emits:** `contacts.json` — `{generated_at, source, count, linked_count, draft_count, statuses{}, flags{},
+  company_roles{}, company_verticals{}, contacts[]}` (each contact carries the person columns + derived
+  `status`, `company_role/vertical/phase/tier`, `logo_slug`, and any matched `draft`). Default output is
+  `_validation/contacts.kb.json`; pass `--out` to publish beside the other dashboard data JSON.
+- **Run:** `node tooling/kb-contacts.mjs [manifest] [--graph PATH] [--entities PATH] [--out PATH] [--check]`
+  (`--check` validates without writing; `--out -` prints to stdout; summary to stderr).
+- **Fidelity vs MOT:** **byte-for-byte identical** to the live `data/contacts.json` (**505 contacts**, all
+  fields incl. `source` and `draft.file`) except `generated_at` (a permitted timestamp). Exact-fidelity gate
+  PASSED. Additive & read-only on the live tree; no write into `__Operations/Dashboard/data/`.
+- **Related, named-not-built:** the **register-rebuild** writer (MOT's invariant-checked `rebuild_contacts.py`
+  + the per-instance-batch `merge_summaries.py` — the write-gate actuators of resource class 3) is slice-documented
+  (`dashboard/DATA_CONTRACT.md`) but not yet ported; kb-contacts ships the *reader* half only (DECISIONS S9).
+
+### kb-dashboard-config.mjs — dashboard slice config generator
+- **Purpose:** emit the single config module the dashboard **slice** reads to learn its instance identity —
+  display name, category rules, the controlled-vocab **orders** its facets sort by (tier scale / phase enum /
+  vertical enum), brand accent + fonts, the top-level folder-prefix convention, the data-layer dir, and which
+  instance-plugin extractor scripts exist. Implements S4's "`src/config` generated from the manifest".
+- **Generalizes:** the hardcoded `src/config` constants in MOT's live dashboard — every emitted value comes
+  from a manifest slot with a documented default only where the manifest omits an optional block.
+- **Reads (manifest):** `company_profile.company.name` → `displayName`; `taxonomy.category_rules`;
+  `vocab.{tier_scale, phase enum, verticals}` → the facet sort orders; `brand.{accent, fonts}`;
+  the top-level folder-prefix convention; `contact_register` (presence → Contacts tab); and the plugin-script list.
+- **Emits:** `dashboard/src/config/instance.config.json` — read by `server.js` at boot (display name,
+  `rootFolderPrefix`, `dataDir`, `literatureDir`, `contactRegister`, `pluginScripts`) and re-served at
+  `GET /api/config`; the client reads the same JSON via `src/config/instance-config.js` (a tiny loader with
+  baked-in fallbacks) for the DataViews vocab-order facets + category rules.
+- **Run:** `node tooling/kb-dashboard-config.mjs [manifest] [--out PATH] [--check]` (`--check` validates
+  without writing; `--out -` prints the config JSON to stdout). Dependency-free (Node stdlib only).
+- **Validation:** the emitted JSON parses; every value traces to a manifest slot or a documented default. Feeds
+  the [`dashboard/DATA_CONTRACT.md`](../dashboard/DATA_CONTRACT.md) core-vs-plugin tab contract.
+
 ### kb-focus.mjs — person-focus detector (the focus-detector C-module's B half)
 - **Purpose:** propose a `person_profile.focus` block — which verticals / tiers / contexts / entities /
   document-kinds dominate this person's Drive — so a teammate instance can be focus-adapted at the Step-2 gate.
@@ -149,11 +213,12 @@ reference instance's filled manifest.
   focus_contexts, focus_entities, focus_document_kinds, extra_entities:[], _detection_meta:{method, signals_used,
   confidence, shared_drive_caveat}, _flagged_company_central, _signals}`. `--out -` prints the focus block to stdout.
 - **Run:** `node tooling/kb-focus.mjs [manifest] [graph-index] [--graph PATH] [--out PATH] [--json]`.
-- **Fidelity vs MOT:** **reproduces the slice's `person_profile.detected.json` exactly** — `focus_verticals`
-  `[Equipment, Foundry]`, `focus_tiers` `[1, 2]`, the four tester `focus_contexts`
-  (bosch-bmv190 / elsoft-wafer / elsoft-wafer-stmicro / stmicro-swir), and `focus_entities`
-  Elsoft / Bosch / STMicro / Disco / 4Jet — from the live graph and the frozen snapshot alike. The proposal is a
-  PROPOSAL: a human confirms it at the Step-2 gate before it lands in the teammate's `manifest.json`.
+- **Fidelity vs the reference instance:** **reproduces the slice's detected focus block exactly** —
+  `focus_verticals` `[Equipment, Foundry]`, `focus_tiers` `[1, 2]`, the tester `focus_contexts` (synthetic
+  illustration: partner-a-sensor / partner-b-wafer), and the corresponding partner `focus_entities` — from the
+  live graph and the frozen snapshot alike. The real context tags and account names live in the `_instance`
+  validation records, not in this shipped doc. The proposal is a PROPOSAL: a human confirms it at the Step-2
+  gate before it lands in the teammate's `manifest.json`.
 
 ---
 
@@ -208,10 +273,13 @@ executed_moves`) into a manifest-driven kit that flattens any messy tree into a 
         ┌──────────────┼───────────────────────────────────────────────┐
         │              │                                                │
         ▼              ▼                                                ▼
-   kb-walk        kb-index ──► graph-index.json ──┬──► kb-extract ──► projects (status cards)
-   (catalog;          (nodes + containment        ├──► kb-audit   ──► drift findings (SENSOR)
+   kb-walk        kb-index ──► graph-index.json ──┬──► kb-extract  ──► projects (status cards)
+   (catalog;          (nodes + containment        ├──► kb-audit    ──► drift findings (SENSOR; +contact-register signals)
     dry-run only)      + reference edges)          ├──► kb-entities ──► entities.json (people+companies)
-                                                   └──► kb-focus  ──► person_profile.focus PROPOSAL ──[Step-2 gate]
+                                                   ├──► kb-contacts ──► contacts.json (reads the live shared register)
+                                                   └──► kb-focus    ──► person_profile.focus PROPOSAL ──[Step-2 gate]
+
+   kb-dashboard-config  manifest ──► dashboard/src/config/instance.config.json  (slice identity; served at /api/config)
    migration kit (own chain, gated, off to the side):
         inventory.mjs ──► inventory.json ──[gate 1]──► plan-renames.mjs ──► rename_map.json
                                             ──[gate 2]──► apply-moves.mjs ──► executed_moves.json

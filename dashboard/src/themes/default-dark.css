@@ -1,0 +1,72 @@
+/* Dashboard — Default Dark Theme (framework slice)
+   Neutral accent placeholder. An instance rebrands by overriding these accent
+   tokens from its manifest brand block via tooling/kb-dashboard-config.mjs; the
+   variable NAMES are kept (referenced throughout app.css) so only the values move.
+   The `--mot-*` names are legacy-stable aliases — treat them as "--accent-*". */
+
+:root {
+  /* Brand accent (neutral placeholder — override from manifest brand.accent) */
+  --mot-red: #4b7bd4;
+  --mot-red-hover: #5b8be4;
+  --mot-red-pressed: #3b6bc4;
+  --mot-red-dim: #24518a;
+
+  /* Backgrounds */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3c3c3c;
+  --bg-hover: #4a4a4a;
+
+  /* Text */
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-muted: #606060;
+
+  /* Borders */
+  --border: #555555;
+  --border-focus: var(--mot-red);
+
+  /* UI Elements */
+  --selection-bg: #404040;
+  --selection-border: var(--mot-red);
+  --scrollbar-bg: #2d2d2d;
+  --scrollbar-handle: #555555;
+
+  /* Accent = brand accent (neutral placeholder above) */
+  --accent: var(--mot-red);
+  --accent-hover: var(--mot-red-hover);
+
+  /* Status Colors */
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --success: #10b981;
+  --warning: #f59e0b;  /* amber — also used (hardcoded) by FreshnessDot + .dv-badge--ext */
+
+  --radius: 6px;
+
+  /* Graph node colors live in src/config/categories.js (single source of truth,
+     consumed by both server.js and the React components). No per-category
+     CSS vars here — adding a category is a config edit, not a CSS edit. */
+
+  /* Graph Edge Colors */
+  --graph-edge-trigger: #3b82f6;
+  --graph-edge-standard: #10b981;
+  --graph-edge-tracks: #f97316;
+  --graph-edge-input: #9ca3af;
+  --graph-edge-output: #a855f7;
+  --graph-edge-references: #6b7280;
+  --graph-edge-tagged: #ec4899;
+  --graph-edge-supplies: #f59e0b;
+  --graph-edge-fabricates: #14b8a6;
+  --graph-edge-assembles: #22d3ee;
+  --graph-edge-tests-with: #f97316;
+  --graph-edge-researches: #a855f7;
+  --graph-edge-archive: #6b7280;
+  --graph-edge-contains: #4b5563;  /* gray-600 — structural parent-child */
+
+  /* Tree */
+  --tree-bg: var(--bg-secondary);
+  --tree-indent: 16px;
+  --tree-hover: var(--bg-hover);
+  --tree-active: rgba(212, 75, 56, 0.15);
+}

@@ -1,5 +1,5 @@
 ---
-description: The WORKFLOW skill templates — generalized from MOT's .claude/commands/ into reusable, manifest-parameterized orchestrator skeletons (periodic-sync, ingest-cleanup, drift-fix). Mechanism only; every company value is a {company-slot} naming its manifest field.
+description: The WORKFLOW skill templates — generalized from MOT's .claude/commands/ into reusable, manifest-parameterized orchestrator skeletons (periodic-sync, ingest-cleanup, meeting-ingest, drift-fix, contact-select, outreach-draft). Mechanism only; every company value is a {company-slot} naming its manifest field.
 references:
   - path: templates/README.md
     type: sibling
@@ -30,14 +30,21 @@ slot — never inlines.
 > (`tooling/config.schema.json`). The template carries the *workflow control-flow*; the manifest carries
 > the *values*.
 
-## The four workflow archetypes (and which MOT skill each generalizes)
+## The six workflow archetypes (and which MOT skill each generalizes)
 
 | Template | Archetype | Generalizes (MOT) | Niche helpers it deliberately excludes |
 |---|---|---|---|
-| [periodic-sync.template.md](periodic-sync.template.md) | **the periodic-sync orchestrator** — ingest → per-thread/meeting summaries → port by placement rules → refresh per-entity overviews → two-audience roll-up + QA gate → to-dos → regenerate derived indexes (+ a drift sweep) | `mot-sync` | — |
+| [periodic-sync.template.md](periodic-sync.template.md) | **the periodic-sync orchestrator** — ingest → per-thread/meeting summaries → port by placement rules → refresh per-entity overviews → two-audience roll-up + QA gate → to-dos → regenerate derived indexes (+ a drift sweep, + an optional outreach-cadence step) | `mot-sync` | — |
 | [ingest-cleanup.template.md](ingest-cleanup.template.md) | **the safe-janitor** — stage adapter junk to a review folder, flag borderline, dedupe recurring assets; never deletes | `email-cleanup` | — |
 | [meeting-ingest.template.md](meeting-ingest.template.md) | **the meeting-ingest** — raw transcript+frames → speaker-ID'd, QA'd meeting summary → overview/sync feed (sub-skill of periodic-sync) | `video-process` | `clip` (web-clip cutter) |
 | [drift-fix.template.md](drift-fix.template.md) | **the drift-fix actuator** — read-only audit → dry-run → gated tier-1 auto-fix → tier-2/3 decision list → re-audit | `drift-fix` | — |
+| [contact-select.template.md](contact-select.template.md) | **the contact-select orchestrator** — load register + derived contacts/projects/events JSON → events sweep first → filter → score → constrain per the selection Standard → pooled, unassigned per-sender shortlist with `_archive` rotation (model deferred to the Standard) | `select-contacts` | — |
+| [outreach-draft.template.md](outreach-draft.template.md) | **the outreach-draft skill** — resolve contact → read computed status + derived company axes → ground a real hook in the linked overview → compose in the sender's voice profile → copy-paste draft with archive-on-supersede | `draft-outreach` | — |
+
+**Guarded on the contact register.** The last two archetypes run **only when `{contact-register}.enabled`**
+(manifest `company_profile.contact_register`), and the periodic-sync orchestrator's optional Step 8 wires
+them into the cadence behind the same guard. An instance without a contact register ships neither and skips
+Step 8 entirely.
 
 **Out of the core (named, not built here).** The niche helpers stay instance-local: `clip` (cut
 web-efficient looping clips from source video for the website) and `web-qa` (drive the public site in a
@@ -64,6 +71,11 @@ Every `{curly-brace}` marker names the manifest path it resolves from. The recur
 | `{cadence}` | `cadence` | weekly, publish Tuesday, rolling-prep |
 | `{sync-schema}` · `{quality-standard}` · `{style-standard}` · `{lifecycle-standard}` · `{context-registry}` | the instance's Standards stack + `context_registry` | Sync_Content_Schema, Quality_Standards, … |
 | `{people-registry}` | `entity_registry.people` | the Key People table |
+| `{contact-register}` | `company_profile.contact_register` (`.enabled`/`.shared`/`.path`/`.schema_columns`/`.flag_enum`/`.status_thresholds`/`.senders`/`.shortlists_dir`/`.drafts_dir`) | `__Sales/Contacts/Contacts.md` (11-col schema; `Flag` = do-not-contact/archived) |
+| `{shared-root}` | `storage_profile.shared_root` | the company-shared (e.g. SharePoint-synced) library the register resolves against when `shared: true` |
+| `{selection-standard}` · `{outreach-standard}` · `{voice-profile}` | the instance's outreach Standards stack + `person_profile.voice_profile` | Contact_Selection_Strategy · Engagement_Framework/PR_Style_Guide · Tobias_Voice_Profile |
+| `{derived-status-enum}` | `vocab.derived_contact_status` (DERIVED AT EXTRACT, never stored) | `active`/`idle`/`dormant`/`uncontacted` |
+| `{contacts-json}` · `{contacts-tool}` · `{contacts-rebuild-tool}` | the derived contacts layer + its tools | `contacts.json` · `kb-contacts` (extract) · the gated register rebuild |
 | `{walker-tool}` · `{indexer-tool}` · `{extractor-tool}` · `{state-tool}` · `{audit-tool}` · `{fixer-tool}` · `{pdf-tool}` | the instance's wired B-library | `mot-walker.exe` · `kb-index` · `kb-extract` · `tracker-status` · `kb-audit` · `drift-fix` · `sync-report-pdf` |
 
 ## Filling a skill template for a new instance
@@ -82,3 +94,10 @@ Every `{curly-brace}` marker names the manifest path it resolves from. The recur
    `parent`/`child`; define each edge once).
 
 Templates are extracted **from proven MOT skills**, never speculated ahead of one (ARCHITECTURE §10).
+
+## Extraction verdicts
+
+- **`contact-select` + `outreach-draft` generalized 2026-07-02** — proven on MOT `select-contacts` /
+  `draft-outreach` (register + strategy doc + weekly shortlist + voice-profiled drafts, run on MOT
+  2026-07-01/02). Both guard on `{contact-register}.enabled`; the periodic-sync orchestrator's optional
+  Step 8 wires them into the cadence behind the same guard.

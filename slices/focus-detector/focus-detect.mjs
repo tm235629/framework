@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 /**
+ * FROZEN validation slice — superseded by tooling/kb-focus.mjs (the manifest-driven CLI);
+ * kept as provenance. Its inputs (manifest + snapshot) now live under _instance/.
+ *
  * focus-detect — SANDBOX, READ-ONLY (focus-detector validation slice).
  *
- * Reads ONLY:  ./graph-index.snapshot.json (a FROZEN copy of the metadata; no doc bodies)
- *              ../../tooling/manifest.mot.json (company_profile)
+ * Reads ONLY:  ../../../_instance/focus-detector-data/graph-index.snapshot.json (a FROZEN copy of the metadata; no doc bodies)
+ *              ../../../_instance/manifest.mot.json (company_profile)
  * Writes ONLY: ./focus_signals.json (inside this sandbox folder)
  *
  * It never reads document bodies, never touches __Projects/ etc., and its output path is
@@ -15,8 +18,8 @@ import path from 'path';
 import url from 'url';
 
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
-const SNAPSHOT = path.join(HERE, 'graph-index.snapshot.json');
-const MANIFEST = path.resolve(HERE, '..', '..', 'tooling', 'manifest.mot.json');
+const SNAPSHOT = path.resolve(HERE, '..', '..', '..', '_instance', 'focus-detector-data', 'graph-index.snapshot.json');
+const MANIFEST = path.resolve(HERE, '..', '..', '..', '_instance', 'manifest.mot.json');
 const OUT = path.join(HERE, 'focus_signals.json'); // confined to the sandbox
 
 const graph = JSON.parse(fs.readFileSync(SNAPSHOT, 'utf8'));

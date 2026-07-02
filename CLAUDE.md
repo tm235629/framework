@@ -40,11 +40,14 @@ filled-in content in here.
 | A concrete build increment | [slices/](slices/) — `drift-detection/` = sensor + actuator, built on the reference instance |
 | Framework-level lessons (graduate into templates) | [Learnings/](Learnings/) |
 
-## Status (2026-06-23)
-**Foundation complete & validated against the reference instance (MetaOptics / MOT = Instance Zero).** The
-manifest + full B-library (`tooling/`), the templates, the drift control-loop, the migration kit, and the
-per-path runbooks (`bootstrap/`) are all built; the reference instance is clean. **Not yet done:** the first
-real federated *teammate dry-run*. Live state in [DECISIONS.md](DECISIONS.md).
+## Status (2026-07-02)
+**Foundation complete & validated against the reference instance (MetaOptics / MOT = Instance Zero).** Built:
+the manifest + full B-library (`tooling/`, incl. `kb-entities`/`kb-focus`), all **six** template families
+(`templates/`), the drift control-loop, the migration kit (`migration/`), the four bootstrap runbooks + docs
+suite, and the generalization pass (vendor-neutral, gitignored instance data). Repo exported to git (last commit
+2026-06-29). **Next milestone:** the first real federated *teammate dry-run*. Live state in [DECISIONS.md](DECISIONS.md).
+
+> **Instance Zero note:** the filled private files live at `../_instance/{manifest.mot.json, company-seed.json, instance-zero/}` — not in this repo.
 
 ## Working here
 - **Mechanism vs instance:** put reusable templates/tools here; extract abstractions *from* working

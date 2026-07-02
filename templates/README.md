@@ -56,8 +56,15 @@ naming the **manifest field** it draws from — not a literal. A few recurring o
 
 ## What's here
 
-| Template | Mechanism it carries |
+One sub-library per generalizable layer (ARCHITECTURE §6). All mechanism; every value is a `{company-slot}`.
+
+| Sub-library | Mechanism it carries |
 |---|---|
+| [data-model/](data-model/) | The node/edge graph contract — the frontmatter node record, containment-is-free / define-once typed edges, `node_kind`-derived hierarchy, the TL;DR-head digest, the two-axis freshness model, and the field-by-field table. The contract every other layer binds to; design it first. |
+| [standards/](standards/) | The eight generalized governance contracts (placement, lifecycle, quality, style, info-distribution, output-schema, input-format, graph-wiring) — the control loop's **setpoint**. |
+| [instruction/](instruction/) | The two agent-instruction shapes: a root navigation hub (the classify-before-reading routing table + autonomy tiers + avoid-read/superseded conventions) and a nested per-folder rule-file skeleton. |
+| [skills/](skills/) | The four workflow archetypes — periodic-sync orchestrator, safe-janitor ingest-cleanup, meeting-ingest, drift-fix actuator — as thin, manifest-parameterized procedure over Standards. |
+| [registries/](registries/) | The two seed registries filled FIRST: the people-only entity registry (companies derived from folder names) and the confusable-workstream context registry with mandatory difference notes. |
 | [drift-detection/](drift-detection/) | The standing-sensor pattern: a manifest-driven drift auditor + the autonomy-tiered actuator routing + the drift-report artifact. The reusable B-tool is `tooling/kb-audit.mjs`. |
 
 Templates are extracted **from proven MOT artifacts**, never speculated ahead of one (ARCHITECTURE §10).

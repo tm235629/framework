@@ -129,7 +129,12 @@
             },
             "supply_chain_roles": {
               "type": "array",
-              "description": "Observed values of `supply_chain_role`. NOTE: currently UNCONTROLLED in MOT (free-form). Listed so a B-tool can normalise; flag drift against this set. Must cover the FULL live spread, including the off-enum live values surfaced by the audit (`none`, `software_platform`, `research-partner`), not just the canonical roles. KNOWN TODO: this set still contains synonym pairs that should be de-duped to one canonical each (`researcher`/`research`, `supplier`/`vendor`) — left in until a normalisation map is added so a B-tool can recognise every live value without false-flagging it as drift.",
+              "description": "Instance-defined enum of `supply_chain_role` values; a B-tool flags drift against this set. Canonical example set: `customer` | `supplier` | `research-partner`. Instances may extend it, but should keep the set small and synonym-free (one canonical value per role, no synonym pairs).",
+              "items": { "type": "string" }
+            },
+            "derived_contact_status": {
+              "type": "array",
+              "description": "DERIVED-ONLY vocabulary for a contact's engagement status, computed AT EXTRACT (kb-contacts) from a register row's Last-contact date against company_profile.contact_register.status_thresholds — and NEVER STORED in the register itself (the register carries the raw Last-contact date; the status is recomputed every run so it can't go stale). Canonical set: `active` (last contact ≤ active_days), `idle` (≤ idle_months), `dormant` (beyond idle_months), `uncontacted` (no Last-contact date). Analogous to how status_enum is the on-disk lifecycle vocabulary, but this one is output-only.",
               "items": { "type": "string" }
             },
             "document_kinds": {
@@ -432,7 +437,43 @@
             "sync_period": { "type": "string", "description": "e.g. 'weekly'." },
             "publish_day": { "type": "string", "description": "Day the sync is frozen/published, e.g. 'Tuesday'." },
             "model": { "type": "string", "description": "Prep model, e.g. 'rolling-prep: prior week frozen, next-week draft accumulates'." },
-            "pdf_render_schedule": { "type": "string", "description": "Scheduled PDF render, e.g. 'Tuesday 07:00 (MOT Weekly Sync PDF task)'." }
+            "pdf_render_schedule": { "type": "string", "description": "Scheduled PDF render, e.g. 'Tuesday 07:00 (MOT Weekly Sync PDF task)'." },
+            "outreach": {
+              "type": "object",
+              "description": "Outreach/shortlist cadence for the weekly contact-shortlist skill (kb-contacts / select-contacts). Present only when contact_register is enabled.",
+              "additionalProperties": false,
+              "properties": {
+                "shortlist_period": { "type": "string", "description": "How often the outreach shortlist is regenerated. Default 'weekly'." },
+                "staleness_flag_days": { "type": "integer", "description": "Days since a register row's Last-contact date after which the shortlist flags the contact as stale/re-engage. Default 7." }
+              }
+            }
+          }
+        },
+        "contact_register": {
+          "type": "object",
+          "description": "LIVE SHARED COMPANY REGISTER (resource class 3): exactly ONE on-disk source of truth per company for a deliberately-shareable mutable register — the first instance is the contact/address register. Written ONLY through gated mechanisms (invariant-checked rebuild with dry-run default + timestamped backup + atomic write, or CRUD-through-server that re-derives immediately). Each teammate instance READS it (deriving contact status locally at extract, company axes against its own graph) and CONTRIBUTES per-instance batches (mail-scan summaries) that a merge step folds into the SOT. Opt-in: a single-person instance keeps `shared: false` and the register lives in its own Drive. Absent/`enabled: false` ⇒ the Contacts dashboard tab renders its empty state and kb-contacts is a no-op. Rationale for one shared copy: per-drive copies fork Last-contact dates, break the pooled multi-sender shortlist (double-contact risk), and fracture do-not-contact flags.",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Whether this instance has a contact register at all. Default false — the register is opt-in and absent by default." },
+            "shared": { "type": "boolean", "description": "true ⇒ `path` resolves against storage_profile.shared_root (the one shared company copy every teammate reads/writes); false ⇒ resolves against the instance root (a single-person instance keeping its own private register). Default false." },
+            "path": { "type": "string", "description": "Root-relative path to the register markdown file. Default example '__Sales/Contacts/Contacts.md'." },
+            "schema_columns": { "type": "array", "items": { "type": "string" }, "description": "The register table's column headers, in order. Default: Name, Company, Title, Flag, Last contact, Owner, Email, Phone, Context, Linked project, Notes. Person-only columns; company axes (role/vertical/phase/tier) are DERIVED via Linked project against the entity graph, never stored here." },
+            "flag_enum": { "type": "array", "items": { "type": "string" }, "description": "Allowed values of the Flag column. Default ['do-not-contact','archived']." },
+            "status_thresholds": {
+              "type": "object",
+              "description": "Day/month thresholds the extractor uses to DERIVE (never store) each row's contact status from its Last-contact date. See vocab.derived_contact_status.",
+              "additionalProperties": false,
+              "properties": {
+                "active_days": { "type": "integer", "description": "A contact is `active` if last-contacted within this many days. Default 60." },
+                "idle_months": { "type": "integer", "description": "A contact is `idle` up to this many months since last contact (beyond ⇒ `dormant`). Default 6." }
+              }
+            },
+            "role_inbox_patterns": { "type": "array", "items": { "type": "string" }, "description": "Role-inbox address prefixes filtered out of the register at rebuild (a rebuild never adds a shared/role mailbox as a person). e.g. 'info@','sales@','support@','noreply@'." },
+            "senders": { "type": "array", "items": { "type": "string" }, "description": "Ids/names referencing entity_registry.people who send outreach — the register's owning senders for the pooled multi-sender shortlist." },
+            "sources_dir": { "type": "string", "description": "Root-relative folder holding the per-instance source batches (mail-scan summaries) the merge step folds into the register." },
+            "shortlists_dir": { "type": "string", "description": "Root-relative folder the weekly outreach shortlist is written to." },
+            "drafts_dir": { "type": "string", "description": "Root-relative folder the outreach draft emails are written to." },
+            "derived_json": { "type": ["string", "null"], "description": "OPTIONAL hint: root-relative path to the derived contacts JSON the instance's extractor writes (e.g. a dashboard data file). Consumed by kb-audit's register_vs_derived_drift signal; when null/absent the signal skips silently (or pass --contacts-json)." }
           }
         },
         "storage_profile": {
@@ -444,6 +485,10 @@
             "kind": { "type": "string", "enum": ["synced_cloud", "local", "git"], "description": "synced_cloud (OneDrive) -> churn/lock guards ON." },
             "platform": { "type": "string", "description": "OS, e.g. 'windows'." },
             "root": { "type": "string", "description": "Absolute Drive root (the only absolute path B-tools need). Person/instance overridable but seeded company-wide for the reference machine." },
+            "shared_root": {
+              "type": ["string", "null"],
+              "description": "Company-SHARED storage location (e.g. a SharePoint-synced library path) that live shared registers resolve against — distinct from `root`, which is this instance's own Drive. A shared register whose `shared: true` resolves its `path` against this root so every teammate reads/writes the SAME on-disk source of truth; `shared: false` registers resolve against `root` instead. null (default) means no shared library is configured — an instance with only `shared: false` registers keeps this null."
+            },
             "protected_root_markers": {
               "type": "array",
               "description": "Marker substrings identifying a LIVE / protected Drive the migration kit must never mutate. If the manifest's resolved root contains any of these, the migration executor (apply-moves.mjs) HARD-REFUSES --apply/--rollback unless the operator sets MIGRATION_TARGET_IS_NOT_PROTECTED=1 AND passes --i-understand. The reference instance uses ['OneDrive - MetaOptics']; an unprotected target Drive leaves this empty (`[]`) so a real migration can run.",
@@ -472,6 +517,8 @@
             "role": { "type": "string", "description": "Job role, the prior for focus inference." }
           }
         },
+        "voice_profile": { "type": ["string", "null"], "description": "Root-relative path to THIS person's outreach voice profile (the tone/style guide the draft-outreach skill writes in their voice). null (default) when the person authors no outreach." },
+        "outreach_sender": { "type": "boolean", "description": "Whether this person is an outreach sender in the pooled multi-sender shortlist (their id appears in company_profile.contact_register.senders). Default false." },
         "root_override": {
           "type": "string",
           "description": "Absolute Drive root for THIS person's machine if it differs from the company seed. Optional."

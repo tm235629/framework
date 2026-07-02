@@ -8,9 +8,12 @@ tags: [framework-meta]
 
 # Focus-detector validation (sandbox, read-only)
 
-> **Reference instance:** MetaOptics (MOT) is the worked *reference instance* ("Instance Zero") for this
-> validation — `manifest.mot.json`, the named accounts (Bosch/STMicro/Elsoft/Disco/4Jet/MMI/AMAT), the
-> VP-Systems person, and the detected snapshot are all that instance's, cited as the worked example. The
+> **Accounts anonymized 2026-07-02;** the original validation record with real accounts lives in the private
+> `_instance/` area (`_instance/instance-zero/focus-detector-VALIDATION-original.md`).
+
+> **Reference instance:** the worked *reference instance* ("Instance Zero") for this validation —
+> `manifest.mot.json`, the named accounts (Partner-B/Partner-C/Partner-A/Partner-D/Partner-E/Partner-F/Partner-G),
+> the VP-Systems person, and the detected snapshot are all that instance's, cited as the worked example. The
 > detector itself is company-agnostic (a pure function of any instance's graph + manifest).
 
 **What ran:** `focus-detect.mjs` over a *frozen* `graph-index.snapshot.json` (metadata only, no doc bodies) +
@@ -21,10 +24,10 @@ tags: [framework-meta]
 
 | Field | Manual | Detected | Verdict |
 |-------|--------|----------|---------|
-| **focus_verticals** | Equipment, Foundry | **Equipment, Foundry** | ✅ exact (Equipment = Elsoft 152 files concentrated; Foundry = Disco/4Jet/Ultimems/Samsung/Google breadth) |
+| **focus_verticals** | Equipment, Foundry | **Equipment, Foundry** | ✅ exact (Equipment = Partner-A 152 files concentrated; Foundry = Partner-D/Partner-E/Partner-J/Partner-H/Partner-I breadth) |
 | **focus_tiers** | 1, 2 | **1, 2** | ✅ exact (tier 2 = 320 files, tier 1 = 120; tiers 3–4 shallow) |
-| **focus_contexts** | bosch, stmicro, elsoft, elsoft-stmicro, dlw | bosch, elsoft, elsoft-stmicro, stmicro | ⚠️ 4/5 — missed `dlw-programme` (no owner file → unmeasurable); surfaced `mot-camera-modules` as a company-central extra (flagged, not promoted) |
-| **focus_entities** | Elsoft, Bosch, STMicro, Disco, 4Jet, **MMI, AMAT** | Elsoft, Bosch, STMicro, Disco, 4Jet | ⚠️ 5/7 — missed MMI, AMAT (thin file-depth DLW partners) |
+| **focus_contexts** | partner-b, partner-c, partner-a, partner-a-partner-c, dlw | partner-b, partner-a, partner-a-partner-c, partner-c | ⚠️ 4/5 — missed `dlw-programme` (no owner file → unmeasurable); surfaced `mot-camera-modules` as a company-central extra (flagged, not promoted) |
+| **focus_entities** | Partner-A, Partner-B, Partner-C, Partner-D, Partner-E, **Partner-F, Partner-G** | Partner-A, Partner-B, Partner-C, Partner-D, Partner-E | ⚠️ 5/7 — missed Partner-F, Partner-G (thin file-depth DLW partners) |
 | **focus_document_kinds** | tester analysis, wafer-level test, meeting records, Overviews, sync | testing_analysis (98), meeting records (93), Overviews (98), wafer-level | ✅ strong match |
 
 **Bottom line:** the detector independently reproduces the *core* focus (verticals, tiers, the tester
@@ -44,7 +47,7 @@ real deployment) this is moot — the whole Drive *is* the person — but the si
 1. **`dlw-programme` context has `owner: null`** — no owner file, so it's structurally invisible (and it's a
    drift signal in its own right: a registered context should have an owner). The manual profile knew about
    DLW; structure couldn't see it.
-2. **File-depth misses thin-but-important relationships** — MMI/AMAT (DLW partners) carry few files yet
+2. **File-depth misses thin-but-important relationships** — Partner-F/Partner-G (DLW partners) carry few files yet
    matter. A reference/relationship signal catches them; file-depth alone does not.
 
 ## Improvements for the framework focus-detector
@@ -58,23 +61,23 @@ real deployment) this is moot — the whole Drive *is* the person — but the si
 
 We then tried to "harden" v1 by hard-excluding hubs. Both attempts made the *core* worse:
 
-- **v2 (referrer-diversity hard-exclude):** fixed the camera-modules leak but **dropped Bosch** — a tier-1
+- **v2 (referrer-diversity hard-exclude):** fixed the camera-modules leak but **dropped Partner-B** — a tier-1
   focus that is merely *widely referenced*, not a company hub. The seed got polluted by `__MOT` structural
   hubs, so propagation amplified AI/research (Princeton, Meta AI, I2R) instead of testers.
 - **v3 (node_kind structural exclude):** cleanly removed `__MOT`/`vertical-index` hubs — but `node_kind:
-  product-parent` **also tags Elsoft** (the #1 focus) and the Elsoft testers, so it **dropped Elsoft and
+  product-parent` **also tags Partner-A** (the #1 focus) and the Partner-A testers, so it **dropped Partner-A and
   collapsed the Equipment vertical** (463 → 84). The seed even pulled in `MDesign` (archived, tier 4).
 
 **Conclusion: no single structural heuristic separates person-focus from company structure on a shared
 drive.** Each hard-exclude has a failure mode — file-depth → hubs leak; referrer-diversity → drops marquee
 accounts; node_kind → drops `product-parent` focuses. `product-parent` is *both* a structural hub *and* a
-primary focus (Elsoft); a high reference count is *both* noise (camera-modules) *and* signal (Bosch).
+primary focus (Partner-A); a high reference count is *both* noise (camera-modules) *and* signal (Partner-B).
 
 ## The hardened design (what graduates to the framework)
 1. **Per-person federated drive = the real deployment.** There the whole drive *is* the person, so simple
    v1-style distribution is accurate and the shared-drive ambiguity does not exist. This is the primary mode.
 2. **Shared drive needs a person-attribution channel** (authorship / edit-recency / meeting + email
-   participation) — the *only* thing that distinguishes ASTAR-the-company-engagement from Tobias-the-tester.
+   participation) — the *only* thing that distinguishes ASTAR-the-company-engagement from the-person-the-tester.
 3. **Structural signals are SOFT ensemble features, never single-signal vetoes.** node_kind, referrer-
    diversity, work-depth and reference-propagation each contribute a weighted vote; none excludes alone.
 4. **v1 (distribution) is the canonical base**; `v2`/`v3` are retained here as the instructive negative

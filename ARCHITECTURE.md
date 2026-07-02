@@ -1,7 +1,7 @@
 ---
 description: The conceptual core of the replication framework — the knowledge-OS pattern generalized, the B/C/A escalation ladder, the manifest contract, and the two libraries (deterministic tools vs reasoning modules).
 references: None
-status: draft
+status: current
 context: framework-architecture
 tags: [framework-meta]
 node_kind: topic
@@ -13,9 +13,10 @@ node_kind: topic
 > *cited worked example*, not the subject — the framework is company-agnostic; MOT is simply the
 > first Drive it was derived from and validated against.
 
-> Status: design artifact derived from a full analysis of the reference instance, the MetaOptics
-> OneDrive (6-layer parallel mapping + synthesis, 2026-06-21). Nothing here is built yet; this is
-> the target we build toward. Every claim about the reference instance is sourced from that analysis.
+> Status: this document **records the design**; the foundation was **built & validated 2026-06-22**
+> (derived from a full analysis of the reference instance, the MetaOptics OneDrive — 6-layer parallel
+> mapping + synthesis, 2026-06-21). See [DECISIONS.md](DECISIONS.md) for live state. Every claim about
+> the reference instance is sourced from that analysis.
 
 ---
 
@@ -95,17 +96,25 @@ declarative description of a target Drive that fully parameterizes every determi
 
 ```
 manifest = {
-  root,                       # absolute Drive root (the only path B tools need)
-  taxonomy,                   # top-level tiers + their purposes; folder categories
-  vocab,                      # tier scale, phase enum, vertical lanes, edge-type cluster, node_kind values
-  frontmatter_schema,         # required/optional node fields + the TL;DR-head key set
-  entity_registry,            # people → companies → roles (seeded FIRST; the SOT MOT never built)
-  context_registry,           # confusable workstreams + mandatory difference notes
-  input_adapters,             # inbox/meeting source grammar + junk patterns + transcription backend
-  excludes,                   # skip dirs/exts/names for the walker (single source, no hand-mirrored copies)
-  brand,                      # theme colors, fonts, PDF footer, QA target URL
-  cadence,                    # sync period + freeze/draft boundary
-  storage_profile            # synced-cloud (OneDrive) vs local/git → toggles churn/lock guards
+  manifest_version,
+  company_profile: {           # shared invariants — the company seed (§11)
+    company,                   # slug + display name
+    taxonomy,                  # top-level tiers + their purposes; folder categories
+    vocab,                     # tier scale, phase enum, vertical lanes, edge-type cluster, node_kind values
+    frontmatter_schema,        # required/optional node fields + the TL;DR-head key set
+    entity_registry,           # PEOPLE seeded first; companies are DERIVED from <projects_root>/ folder names
+    context_registry,          # confusable workstreams + mandatory difference notes
+    input_adapters,            # inbox/meeting source grammar + junk patterns + transcription backend
+    excludes / catalog_profile,# skip dirs/exts/names (single source, no hand-mirrored copies)
+    supply_chain_roles,        # canonical role enum + synonym de-dup
+    brand,                     # theme colors, fonts, PDF footer, QA target URL
+    cadence                    # sync period + freeze/draft boundary
+  },
+  person_profile: {            # per-instance focus overlay, composed locally (§11)
+    root_override / scan_roots,# this person's absolute Drive root + scan roots
+    focus                      # focus-detected taxonomy extensions + extra_entities (confidential, local only)
+  },
+  storage_profile             # synced-cloud (OneDrive) vs local/git → toggles churn/lock guards
 }
 ```
 
@@ -113,10 +122,12 @@ manifest = {
 > manifest (+ a change-plan, below). B tools are pure functions of it. On-disk it lives as
 > `manifest.json` (validated against `tooling/config.schema.json`).
 
-The manifest is **layered**: a *company profile* (shared invariants — verticals, partner registry,
-brand) composed with a *person/instance profile* (focus-specific taxonomy extensions, entities, cadence).
-Each instance composes the two **locally**; the company profile is a shared *seed*, never a central live
-store (§11).
+The manifest is **layered**: a `company_profile` (shared invariants — verticals, partner registry,
+brand) composed with a `person_profile` (focus-specific taxonomy extensions, entities, cadence). Each
+instance composes the two **locally**; the company profile is a shared *seed*, never a central live
+store (§11). The `entity_registry` is **people-only** — companies are derived from `<projects_root>/`
+folder names (the reference instance built this as `entities.json` on 2026-07-02, resolving the
+entity-SOT the original had lacked — see §7).
 
 C also emits a **change-plan** — a reviewable diff of intended moves/edits — which a deterministic
 executor applies idempotently with a dry-run preview. *The agent decides **what**; the tool does
@@ -168,7 +179,10 @@ hold are company-specific.
 5. **Tooling / dashboard** — the B-library materialized: graph indexer, STATE summarizer, catalog
    walker, ref validator, PDF renderer, and an optional dashboard serving the derived JSON with
    exactly one content-keyed write-back overlay. **Markdown is always source of truth; all
-   JSON/PDF/catalogs are regenerable.**
+   JSON/PDF/catalogs are regenerable.** The optional dashboard ships as the `dashboard/` slice —
+   `KB_ROOT`-parameterized, `src/config` generated from the manifest by `tooling/kb-dashboard-config.mjs`,
+   with core tabs fed by the `kb-*` tools and instance-plugin tabs fed by an instance-supplied extractor
+   (DECISIONS O4; the [`dashboard/DATA_CONTRACT.md`](dashboard/DATA_CONTRACT.md)).
 6. **Learnings feedback loop** — a shared, append-only, topic-scoped log whose entries *graduate*
    into binding Standards. The mechanism by which both a company instance *and this framework itself*
    self-document and improve. (This framework keeps its own loop at `Learnings/`.)
@@ -287,6 +301,20 @@ source of truth.
 - **Aggregation is a deliberate *later* option, gated on confidentiality** — at most a future read-only
   federation view over selected, shareable slices, never an automatic merge. Until then, instances are
   independent and only the *mechanisms* (plus an optional company-invariant seed) are common.
+
+**Three resource classes (the shared-state model).** State an instance touches is exactly one of three
+classes: (1) a **copy-time company seed** — the `company_profile` slots forked-and-owned per instance at
+bootstrap; (2) **instance-local person data** — `person_profile` + focus config, private to the owning Drive,
+never pooled; (3) a **live shared company register** — exactly *one* on-disk source of truth per company for a
+deliberately-shareable *mutable* register (first instance: the contact roster). Class 3 is distinct from both
+the copy-time seed (which forks) and the deferred read-only federation view (which only reads across
+instances): it is a single writable SOT that teammate instances **read** (computing status locally, deriving
+company axes against their own graph) and **contribute** per-instance batches to, which a merge step folds
+back in. It is **opt-in** (a single-person instance keeps it un-shared, living in its own Drive) and its SOT
+is **write-gated** — mutated only through an invariant-checked rebuild (dry-run default + timestamped backup +
+atomic write) or a CRUD-through-server that re-derives immediately, never by ad-hoc per-drive edits (those
+fork last-contact dates and fracture do-not-contact flags). The confidentiality stance above is **unchanged**:
+class 3 is a *deliberately-shareable slice*, not a licence to pool financial/HR/legal data.
 
 ---
 

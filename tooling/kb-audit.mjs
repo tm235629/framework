@@ -31,7 +31,9 @@
  *   missing_required_frontmatter, invalid_reference_type / legacy_reference_type,
  *   invalid_status_enum, phase_archived_location_mismatch,
  *   overview_missing_tldr / tldr_last_activity_no_iso,
- *   dead_reference / provenance_ref_unresolved, suspected_stale_sibling.
+ *   dead_reference / provenance_ref_unresolved, suspected_stale_sibling,
+ *   shortlist_staleness / register_vs_derived_drift (contact-register block only;
+ *   strict no-ops when company_profile.contact_register is absent/disabled).
  *
  * False-positive guards (same as MOT, DESIGN.md §"Risks"):
  *   - _catalog.md never flagged for missing frontmatter (walker-generated refs).
@@ -47,9 +49,10 @@
  * nothing in the live Drive.
  *
  * Usage:
- *   node tooling/kb-audit.mjs [manifestPath] [--out PATH] [--json]
+ *   node tooling/kb-audit.mjs [manifestPath] [--out PATH] [--contacts-json PATH] [--json]
  *   default manifestPath = manifest.example.json (shipped demo; copy to manifest.json and edit for your Drive)
  *   default --out        = tooling/_validation/drift.kb.json
+ *   --contacts-json      = optional hint for the register-vs-derived signal (else contact_register.derived_json, else skip)
  *
  * Frontmatter parsing reuses kb-index.mjs's parseFile (gray-matter), declared in
  * this package's package.json and installed standalone via `npm install` in
@@ -119,6 +122,11 @@ function loadVocab(manifestPath) {
     avoidFlagValue: avoidMarker.flag_value || 'avoid',
     // Raw-archive root segments (provenance dead-ref reclassification).
     rawArchiveRoots: rawRoots,
+    // Live shared contact register ([S1]/[S2]) — all optional; the register
+    // signals are strict no-ops when contactRegister is absent/disabled.
+    sharedRoot: (cp.storage_profile && cp.storage_profile.shared_root) || null,
+    contactRegister: cp.contact_register || null,
+    outreachCadence: (cp.cadence && cp.cadence.outreach) || null,
   };
 }
 
@@ -230,8 +238,130 @@ function suspectedStale(files) {
   return suspected;
 }
 
+// ── Contact-register signals (S1/S2 live shared register) ─────────────────
+// Both are MANIFEST-LEVEL (one check per audit, not per-node) and are strict
+// NO-OPS on manifests without the new blocks: contact_register absent/disabled,
+// or cadence.outreach absent, → return no findings, no crash. Mirrors MOT's
+// tracker-status.py shortlist flag (Contact_Selection_Strategy.md §8), lifted to
+// the manifest so any instance's register drift surfaces in the same audit.
+//
+// Register path resolution ([S2]): contact_register.shared === true resolves
+// against storage_profile.shared_root (the company-shared library); otherwise
+// against the instance root. A shared register with no shared_root configured is
+// itself a low-severity misconfiguration finding rather than a crash.
+function resolveRegisterBase(V) {
+  const cr = V.contactRegister;
+  if (cr && cr.shared) return V.sharedRoot || null;   // null → shared but unconfigured
+  return V.root;
+}
+
+// (1) shortlist-staleness — the weekly shortlist output should be fresher than
+// cadence.outreach.staleness_flag_days. Missing dir / no dated shortlist / stale
+// newest → one finding. Generalizes tracker-status.py's "Outreach shortlist is N
+// days old" flag.
+function shortlistStalenessFinding(V) {
+  const cr = V.contactRegister;
+  const outreach = V.outreachCadence;
+  if (!cr || !cr.enabled) return null;          // S1 no-op: register absent/disabled
+  if (!outreach) return null;                   // no outreach cadence → nothing to age against
+  const base = resolveRegisterBase(V);
+  if (base == null) {
+    return mkFinding({
+      signal: 'shortlist_staleness',
+      severity: 'low', fixability: 'needs_judgment', autonomy_tier: 3,
+      id: 'contact_register',
+      detail: 'contact_register.shared is true but storage_profile.shared_root is not configured — cannot resolve the shortlists directory.',
+      suggested_fix: 'Set storage_profile.shared_root to the company-shared library path, or set contact_register.shared: false.',
+      rule: 'Contact_Selection_Strategy §8',
+    });
+  }
+  const staleDays = Number.isFinite(outreach.staleness_flag_days) ? outreach.staleness_flag_days : 7;
+  const dir = path.resolve(base, cr.shortlists_dir || '');
+  let dated = [];
+  try {
+    dated = fs.readdirSync(dir)
+      .filter(n => /^\d{8}.*\.md$/i.test(n) && fs.statSync(path.join(dir, n)).isFile())
+      .map(n => n.slice(0, 8))
+      .filter(d => /^\d{8}$/.test(d))
+      .sort();
+  } catch {
+    // dir missing / unreadable → treated as "no shortlist yet" below.
+    dated = [];
+  }
+  if (!dated.length) {
+    return mkFinding({
+      signal: 'shortlist_staleness',
+      severity: 'med', fixability: 'needs_judgment', autonomy_tier: 3,
+      id: cr.shortlists_dir || 'shortlists',
+      detail: 'No outreach shortlist found — the weekly shortlist cadence has produced nothing yet.',
+      suggested_fix: 'Run the shortlist step (MOT: /select-contacts) to produce this week\'s picks.',
+      rule: 'Contact_Selection_Strategy §8',
+    });
+  }
+  const newest = dated[dated.length - 1];
+  const y = +newest.slice(0, 4), mo = +newest.slice(4, 6), d = +newest.slice(6, 8);
+  const ageDays = Math.floor((Date.now() - Date.UTC(y, mo - 1, d)) / 86400000);
+  if (ageDays > staleDays) {
+    return mkFinding({
+      signal: 'shortlist_staleness',
+      severity: 'med', fixability: 'needs_judgment', autonomy_tier: 3,
+      id: cr.shortlists_dir || 'shortlists',
+      detail: `Outreach shortlist is ${ageDays} days old (newest ${newest}; threshold ${staleDays}).`,
+      suggested_fix: 'Run the shortlist step (MOT: /select-contacts) to refresh this week\'s picks.',
+      rule: 'Contact_Selection_Strategy §8',
+    });
+  }
+  return null;                                  // fresh → no finding
+}
+
+// (2) register-vs-derived drift — if the on-disk register was edited more
+// recently than the derived contacts JSON, the extract is behind. The JSON path
+// is not something the audit can always know: prefer an explicit hint
+// (contact_register.derived_json in the manifest, or a --contacts-json CLI arg);
+// if neither is present, skip with a debug note (no finding, no crash).
+function registerDerivedDriftFinding(V, contactsJsonArg) {
+  const cr = V.contactRegister;
+  if (!cr || !cr.enabled) return null;          // S1 no-op
+  const base = resolveRegisterBase(V);
+  if (base == null) return null;                // shared-but-unconfigured already flagged above
+  const regPath = path.resolve(base, cr.path || '');
+  const hint = contactsJsonArg || cr.derived_json || null;
+  if (!hint) {
+    // Unknown derived-JSON location → skip (debug note only, per spec).
+    if (process.env.KB_AUDIT_DEBUG) {
+      process.stderr.write('kb-audit[debug]: register-vs-derived skipped — no --contacts-json arg or contact_register.derived_json hint.\n');
+    }
+    return null;
+  }
+  const jsonPath = path.isAbsolute(hint) ? hint : path.resolve(base, hint);
+  let regStat, jsonStat;
+  try { regStat = fs.statSync(regPath); } catch { return null; }   // no register on disk → nothing to compare
+  try { jsonStat = fs.statSync(jsonPath); } catch {
+    // Derived JSON missing → the extract has never run against this register.
+    return mkFinding({
+      signal: 'register_vs_derived_drift',
+      severity: 'low', fixability: 'needs_judgment', autonomy_tier: 3,
+      id: cr.path || 'contact_register',
+      detail: 'Contact register exists but the derived contacts JSON is missing — extract has not run against it.',
+      suggested_fix: 'Run the extract step to (re)generate the derived contacts JSON.',
+      rule: 'Contact_Selection_Strategy §8',
+    });
+  }
+  if (regStat.mtimeMs > jsonStat.mtimeMs) {
+    return mkFinding({
+      signal: 'register_vs_derived_drift',
+      severity: 'low', fixability: 'needs_judgment', autonomy_tier: 3,
+      id: cr.path || 'contact_register',
+      detail: 'register changed since last extract',
+      suggested_fix: 'Re-run the extract step so the derived contacts JSON reflects the current register.',
+      rule: 'Contact_Selection_Strategy §8',
+    });
+  }
+  return null;
+}
+
 // ── Core: compute findings (the generic computeFindings) ──────────────────
-function computeFindings(index, V) {
+function computeFindings(index, V, opts = {}) {
   const findings = [];
   const root = V.root;
 
@@ -420,6 +550,14 @@ function computeFindings(index, V) {
     }));
   }
 
+  // ── Signal 6a: shortlist staleness (contact-register live shared reg) ────
+  const stale = shortlistStalenessFinding(V);
+  if (stale) findings.push(stale);
+
+  // ── Signal 6b: register-vs-derived drift ────────────────────────────────
+  const rvd = registerDerivedDriftFinding(V, opts.contactsJson);
+  if (rvd) findings.push(rvd);
+
   return findings;
 }
 
@@ -453,10 +591,10 @@ function activityStripRegex(dateKey) {
 function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 // ── runAudit — assemble drift.json (mirrors mot-tools.js runAudit shape) ──
-function runAudit(manifestPath) {
+function runAudit(manifestPath, opts = {}) {
   const V = loadVocab(manifestPath);
   const index = buildIndex(manifestPath);
-  const findings = computeFindings(index, V);
+  const findings = computeFindings(index, V, opts);
 
   const counts = { high: 0, med: 0, low: 0, fixable: 0, needs_judgment: 0 };
   for (const f of findings) {
@@ -491,7 +629,15 @@ function main() {
   const inlineOut = args.find(a => a.startsWith('--out='));
   if (inlineOut) out = inlineOut.replace(/^--out=/, '');
 
-  const manifestArg = args.find(a => !a.startsWith('--') && a !== out);
+  // Optional derived-contacts-JSON hint for the register-vs-derived signal.
+  let contactsJson = null;
+  const cjFlagIdx = args.findIndex(a => a === '--contacts-json');
+  if (cjFlagIdx >= 0) { contactsJson = args[cjFlagIdx + 1]; }
+  const inlineCj = args.find(a => a.startsWith('--contacts-json='));
+  if (inlineCj) contactsJson = inlineCj.replace(/^--contacts-json=/, '');
+
+  const consumed = new Set([out, contactsJson].filter(Boolean));
+  const manifestArg = args.find(a => !a.startsWith('--') && !consumed.has(a));
   const manifestPath = manifestArg
     ? path.resolve(process.cwd(), manifestArg)
     : path.resolve(__dirname, 'manifest.example.json');
@@ -501,7 +647,7 @@ function main() {
     return 1;
   }
 
-  const drift = runAudit(manifestPath);
+  const drift = runAudit(manifestPath, { contactsJson });
 
   // OUTPUT IS WRITE-ONLY UNDER tooling/_validation/ — never the live Drive.
   const outPath = out

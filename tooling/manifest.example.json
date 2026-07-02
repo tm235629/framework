@@ -43,6 +43,7 @@
       "node_kinds": ["topic", "product-parent"],
       "status_enum": ["current", "exploratory", "superseded", "legacy", "draft"],
       "supply_chain_roles": ["customer", "supplier", "integrator", "research-partner", "none"],
+      "derived_contact_status": ["active", "idle", "dormant", "uncontacted"],
       "document_kinds": [
         { "key": "testing_analysis", "label": "test/measurement analysis", "path_patterns": ["/Testing/|/Analysis/"] },
         { "key": "meeting_records", "label": "meeting records", "path_patterns": ["/Meetings/", "_meeting_summary\\.md$"] },
@@ -145,12 +146,30 @@
       "sync_period": "weekly",
       "publish_day": "Monday",
       "model": "rolling-prep: prior week frozen, next-week draft accumulates",
-      "pdf_render_schedule": "Monday 08:00"
+      "pdf_render_schedule": "Monday 08:00",
+      "outreach": {
+        "shortlist_period": "weekly",
+        "staleness_flag_days": 7
+      }
+    },
+    "contact_register": {
+      "enabled": false,
+      "shared": false,
+      "path": "Sales/Contacts/Contacts.md",
+      "schema_columns": ["Name", "Company", "Title", "Flag", "Last contact", "Owner", "Email", "Phone", "Context", "Linked project", "Notes"],
+      "flag_enum": ["do-not-contact", "archived"],
+      "status_thresholds": { "active_days": 60, "idle_months": 6 },
+      "role_inbox_patterns": ["info@", "sales@", "support@", "noreply@"],
+      "senders": ["Dana Lin"],
+      "sources_dir": "Sales/Contacts/sources",
+      "shortlists_dir": "Sales/Contacts/shortlists",
+      "drafts_dir": "Sales/Contacts/drafts"
     },
     "storage_profile": {
       "kind": "local",
       "platform": "linux",
       "root": "/srv/acme-drive",
+      "shared_root": null,
       "protected_root_markers": [],
       "churn_guards": false,
       "lock_guards": false
@@ -162,6 +181,8 @@
       "email": "dana.lin@acme.example",
       "role": "Head of Systems"
     },
+    "voice_profile": "Sales/Contacts/voice/dana-lin.md",
+    "outreach_sender": true,
     "focus": {
       "focus_verticals": ["Lenses"],
       "focus_tiers": [1, 2],
