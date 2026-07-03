@@ -145,6 +145,7 @@ function loadContactDrafts(draftsDir) {
       to,
       touch_type: fm.touch_type || null,
       generated: fm.generated || null,
+      ...(fm.sent && { sent: fm.sent instanceof Date ? fm.sent.toISOString().slice(0, 10) : String(fm.sent).trim() }),
       file: relFrom(draftsDir, f),
       ...(related.length && { related_material: related }),
     };
